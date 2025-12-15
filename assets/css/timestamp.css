@@ -1,0 +1,248 @@
+/* ========== 时区信息统计卡片优化 ========== */
+
+/* 覆盖默认的 stats-grid，针对时区信息做特殊处理 */
+.timezone-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+/* 时区统计项优化 */
+.timezone-stat-item {
+    background: linear-gradient(135deg, var(--color-secondary) 0%, rgba(254, 250, 224, 0.5) 100%);
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    border: 2px solid var(--color-tertiary);
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.timezone-stat-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border-color: var(--color-button);
+}
+
+.timezone-stat-value {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--color-headline);
+    margin-bottom: 8px;
+    /* 防止文字溢出 */
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.3;
+}
+
+.timezone-stat-label {
+    font-size: 0.9em;
+    color: var(--color-paragraph);
+    opacity: 0.8;
+    font-weight: 600;
+}
+
+/* 响应式断点优化 */
+@media (max-width: 1200px) {
+    .timezone-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .timezone-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .timezone-stat-item {
+        min-height: 90px;
+    }
+
+    .timezone-stat-value {
+        font-size: 1.2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .timezone-stat-value {
+        font-size: 1.1em;
+    }
+}
+
+.current-time {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-tertiary) 100%);
+    border-radius: 20px;
+    margin-bottom: 30px;
+}
+
+.time-display {
+    font-size: 3em;
+    font-weight: 700;
+    color: var(--color-headline);
+    margin-bottom: 10px;
+    font-family: 'Courier New', monospace;
+}
+
+.time-label {
+    font-size: 1.2em;
+    color: var(--color-paragraph);
+    opacity: 0.8;
+}
+
+.quick-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.quick-btn {
+    padding: 8px 16px;
+    background: white;
+    border: 2px solid var(--color-tertiary);
+    color: var(--color-paragraph);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.quick-btn:hover {
+    background: var(--color-button);
+    border-color: var(--color-button);
+    color: var(--color-button-text);
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--color-secondary);
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.result-label {
+    font-weight: 600;
+    color: var(--color-headline);
+    min-width: 150px;
+}
+
+.result-value {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    color: var(--color-paragraph);
+    padding: 0 15px;
+}
+
+.copy-icon {
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s;
+}
+
+.copy-icon:hover {
+    background: var(--color-button);
+}
+
+/* ========== 自定义日期时间选择器样式 ========== */
+
+.date-time-container {
+    background: linear-gradient(135deg, #fcfcfc 0%, #f5f5f5 100%);
+    padding: 30px;
+    border-radius: 16px;
+    border: 2px solid var(--color-secondary);
+    transition: all 0.3s;
+}
+
+.date-time-container:hover {
+    border-color: var(--color-tertiary);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    font-size: 1.3em;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.datetime-input {
+    width: 100%;
+    padding: 14px 16px 14px 50px;
+    border: 2px solid var(--color-secondary);
+    border-radius: 10px;
+    font-size: 1em;
+    font-family: inherit;
+    transition: all 0.3s;
+    background: white;
+    color: var(--color-headline);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.datetime-input:focus {
+    outline: none;
+    border-color: var(--color-button);
+    box-shadow: 0 0 0 4px rgba(255, 216, 3, 0.15);
+}
+
+.datetime-input:hover {
+    border-color: var(--color-tertiary);
+    background: #fefefe;
+}
+
+.date-hint {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-left: 4px solid #2196F3;
+    border-radius: 8px;
+    font-size: 0.9em;
+    color: var(--color-paragraph);
+}
+
+.date-hint-icon {
+    font-size: 1.3em;
+}
+
+.datetime-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .time-display {
+        font-size: 2em;
+    }
+
+    .date-time-container {
+        padding: 20px;
+    }
+
+    .datetime-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}

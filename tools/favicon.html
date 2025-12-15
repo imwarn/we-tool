@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Favicon 生成器 - 支持图片上传、文字自定义、Emoji 选择，一键生成 ICO/PNG 格式的网站图标">
+    <meta name="keywords" content="favicon生成器,ico生成,网站图标,favicon,icon,emoji图标">
+    <title>Favicon 生成器 - 开发者工具箱</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/tool.css">
+    
+    <style>
+        /* Favicon 工具特定样式 */
+        canvas {
+            display: block;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .size-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .size-item {
+            padding: 15px;
+            background: white;
+            border: 2px solid var(--color-secondary);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .size-item:hover {
+            border-color: var(--color-button);
+            transform: translateY(-2px);
+        }
+
+        .size-item.active {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            background: var(--color-secondary);
+            border-radius: 12px;
+        }
+
+        .emoji-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .emoji-item:hover {
+            background: var(--color-button);
+            transform: scale(1.2);
+        }
+
+        .emoji-item.selected {
+            background: var(--color-button);
+            box-shadow: 0 0 0 3px var(--color-success);
+        }
+
+        .font-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .font-item {
+            padding: 15px;
+            background: white;
+            border: 2px solid var(--color-secondary);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2em;
+        }
+
+        .font-item:hover {
+            border-color: var(--color-button);
+            transform: translateY(-3px);
+        }
+
+        .font-item.active {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <div class="logo-icon">🛠️</div>
+                <span data-i18n="nav.home">开发者工具箱</span>
+            </a>
+            <a href="../index.html" class="back-btn">
+                <span>←</span>
+                <span data-i18n="common.back">返回首页</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">🎨 Favicon 生成器</h1>
+            <p class="page-subtitle">支持图片上传、文字自定义、Emoji 选择，一键生成 ICO/PNG 格式图标</p>
+        </div>
+
+        <!-- 配置面板 -->
+        <div class="tool-panel">
+            <h2 class="section-title">生成配置</h2>
+
+            <!-- 尺寸选择 -->
+            <div class="form-group">
+                <label class="form-label">选择尺寸</label>
+                <div class="size-grid">
+                    <div class="size-item" data-size="16" onclick="selectSize(16)">16×16</div>
+                    <div class="size-item active" data-size="32" onclick="selectSize(32)">32×32</div>
+                    <div class="size-item" data-size="64" onclick="selectSize(64)">64×64</div>
+                    <div class="size-item" data-size="128" onclick="selectSize(128)">128×128</div>
+                    <div class="size-item" data-size="256" onclick="selectSize(256)">256×256</div>
+                </div>
+            </div>
+
+            <!-- Tab 切换 -->
+            <div class="form-group">
+                <label class="form-label">生成方式</label>
+                <div class="tabs">
+                    <button class="tab-btn" onclick="switchTab('upload', event)">
+                        📤 上传图片
+                    </button>
+                    <button class="tab-btn active" onclick="switchTab('text', event)">
+                        ✍️ 文字生成
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('emoji', event)">
+                        😀 Emoji
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 1: 上传图片 -->
+            <div class="tab-content" id="tab-upload">
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <p style="font-size: 1.2em; margin-bottom: 10px; font-weight: 600;">点击或拖拽上传图片</p>
+                    <p style="opacity: 0.7;">支持 PNG、JPG、SVG 格式，自动提取透明背景</p>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+
+                <div class="transparency-control">
+                    <label>
+                        <input type="checkbox" id="imageKeepTransparency" checked>
+                        保持透明背景
+                    </label>
+                </div>
+            </div>
+
+            <!-- Tab 2: 文字生成 -->
+            <div class="tab-content active" id="tab-text">
+                <div class="form-group">
+                    <label class="form-label">输入文字</label>
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="textInput"
+                        placeholder="输入 1-2 个字符"
+                        maxlength="2"
+                        value="D"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">选择字体</label>
+                    <div class="font-grid" id="fontGrid">
+                        <div class="font-item active" data-font="Arial" style="font-family: Arial;">Arial</div>
+                        <div class="font-item" data-font="'Times New Roman'" style="font-family: 'Times New Roman';">Times</div>
+                        <div class="font-item" data-font="'Courier New'" style="font-family: 'Courier New';">Courier</div>
+                        <div class="font-item" data-font="'Georgia'" style="font-family: Georgia;">Georgia</div>
+                        <div class="font-item" data-font="Impact" style="font-family: Impact;">Impact</div>
+                        <div class="font-item" data-font="'Comic Sans MS'" style="font-family: 'Comic Sans MS';">Comic</div>
+                    </div>
+                </div>
+
+                <div class="color-group">
+                    <div class="form-group">
+                        <label class="form-label">背景颜色</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" id="bgColor" value="#ffd803">
+                            <input type="text" class="form-input" id="bgColorText" value="#ffd803">
+                        </div>
+                        <div class="transparency-control">
+                            <label>
+                                <input type="checkbox" id="bgTransparent">
+                                透明背景
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">文字颜色</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" id="textColor" value="#272343">
+                            <input type="text" class="form-input" id="textColorText" value="#272343">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Emoji -->
+            <div class="tab-content" id="tab-emoji">
+                <div class="form-group">
+                    <label class="form-label">选择 Emoji</label>
+                    <div class="emoji-grid" id="emojiGrid"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">背景颜色</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="emojiBgColor" value="#ffd803">
+                        <input type="text" class="form-input" id="emojiBgColorText" value="#ffd803">
+                    </div>
+                    <div class="transparency-control">
+                        <label>
+                            <input type="checkbox" id="emojiBgTransparent">
+                            透明背景
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h4>💡 使用提示</h4>
+                <ul>
+                    <li><strong>ICO 格式</strong>：标准浏览器图标格式，兼容所有浏览器</li>
+                    <li><strong>PNG 格式</strong>：现代格式，支持透明背景，文件更小</li>
+                    <li><strong>透明背景</strong>：勾选后背景完全透明，适配深色/浅色主题</li>
+                    <li><strong>推荐尺寸</strong>：32×32 或 64×64 适合大多数场景</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 预览和下载 -->
+        <div class="tool-panel">
+            <h2 class="section-title">预览和下载</h2>
+
+            <div class="preview-section">
+                <div class="preview-label" id="previewLabel">预览 32×32</div>
+                <div class="preview-box">
+                    <canvas id="previewCanvas" width="32" height="32"></canvas>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="downloadICO()">
+                        <span>💾</span>
+                        <span>下载 ICO 格式</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadPNG()">
+                        <span>📥</span>
+                        <span>下载 PNG 格式</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 公共脚本 -->
+    <script src="../assets/js/common.js"></script>
+
+    <script>
+        // Favicon 工具逻辑
+        let currentMode = 'text';
+        let currentSize = 32;
+        let currentFont = 'Arial';
+        let sourceImage = null;
+        let selectedEmoji = '🎨';
+
+        const emojis = [
+            '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+            '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋',
+            '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳',
+            '🔥', '💧', '⭐', '✨', '💫', '🌟', '⚡', '💥', '💢', '💨',
+            '🎨', '🎭', '🎪', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷',
+            '🎸', '🎺', '🎻', '🪕', '🥃', '🍕', '🍔', '🍟', '🌭', '🍿',
+            '🚀', '🛸', '🛰️', '🌍', '🌎', '🌏', '🗺️', '🏔️', '⛰️', '🌋',
+            '🏕️', '🏖️', '🏜️', '🏝️', '🏞️', '💻', '⌨️', '🖥️', '🖨️', '🖱️',
+            '⚙️', '🔧', '🔨', '🛠️', '🔩', '⚡', '🔌', '💡', '🔦', '🕯️',
+            '📱', '📞', '☎️', '📟', '📠', '📡', '🖥️', '💾', '💿', '📀'
+        ];
+
+        function selectSize(size) {
+            currentSize = size;
+            document.querySelectorAll('.size-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-size="${size}"]`).classList.add('active');
+            
+            const canvas = document.getElementById('previewCanvas');
+            canvas.width = size;
+            canvas.height = size;
+            document.getElementById('previewLabel').textContent = `预览 ${size}×${size}`;
+            
+            generateFavicon();
+        }
+
+        function switchTab(tab, event) {
+            currentMode = tab;
+            DevToolkit.switchTab(tab, event);
+            generateFavicon();
+        }
+
+        function initEmojiGrid() {
+            const grid = document.getElementById('emojiGrid');
+            emojis.forEach((emoji, index) => {
+                const item = document.createElement('div');
+                item.className = 'emoji-item';
+                if (index === 0) {
+                    item.classList.add('selected');
+                    selectedEmoji = emoji;
+                }
+                item.textContent = emoji;
+                item.onclick = () => {
+                    selectedEmoji = emoji;
+                    document.querySelectorAll('.emoji-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    generateFavicon();
+                };
+                grid.appendChild(item);
+            });
+        }
+
+        // 字体选择
+        document.querySelectorAll('.font-item').forEach(item => {
+            item.onclick = () => {
+                currentFont = item.dataset.font;
+                document.querySelectorAll('.font-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                generateFavicon();
+            };
+        });
+
+        // 颜色同步
+        ['bg', 'text', 'emojiBg'].forEach(type => {
+            const colorInput = document.getElementById(`${type}Color`);
+            const textInput = document.getElementById(`${type}ColorText`);
+            
+            if (colorInput && textInput) {
+                colorInput.oninput = () => {
+                    textInput.value = colorInput.value;
+                    generateFavicon();
+                };
+                
+                textInput.oninput = () => {
+                    if (/^#[0-9A-Fa-f]{6}$/.test(textInput.value)) {
+                        colorInput.value = textInput.value;
+                        generateFavicon();
+                    }
+                };
+            }
+        });
+
+        // 透明度控制
+        ['imageKeepTransparency', 'bgTransparent', 'emojiBgTransparent'].forEach(id => {
+            const checkbox = document.getElementById(id);
+            if (checkbox) {
+                checkbox.onchange = generateFavicon;
+            }
+        });
+
+        // 文字输入
+        document.getElementById('textInput').oninput = generateFavicon;
+
+        // 图片上传
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'));
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'));
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleImageFile(files[0]);
+        });
+
+        imageInput.onchange = (e) => {
+            if (e.target.files[0]) handleImageFile(e.target.files[0]);
+        };
+
+        function handleImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    sourceImage = img;
+                    generateFavicon();
+                    DevToolkit.Toast.success('图片上传成功！');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function generateFavicon() {
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            const size = currentSize;
+
+            ctx.clearRect(0, 0, size, size);
+
+            if (currentMode === 'upload') {
+                if (!sourceImage) return;
+                const keepTransparency = document.getElementById('imageKeepTransparency').checked;
+                if (!keepTransparency) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, size, size);
+                }
+                const scale = Math.min(size / sourceImage.width, size / sourceImage.height);
+                const x = (size - sourceImage.width * scale) / 2;
+                const y = (size - sourceImage.height * scale) / 2;
+                ctx.drawImage(sourceImage, x, y, sourceImage.width * scale, sourceImage.height * scale);
+            } else if (currentMode === 'text') {
+                const text = document.getElementById('textInput').value || 'D';
+                const isTransparent = document.getElementById('bgTransparent').checked;
+                if (!isTransparent) {
+                    ctx.fillStyle = document.getElementById('bgColor').value;
+                    ctx.fillRect(0, 0, size, size);
+                }
+                const fontSize = size * 0.75;
+                ctx.fillStyle = document.getElementById('textColor').value;
+                ctx.font = `bold ${fontSize}px ${currentFont}`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, size / 2, size / 2);
+            } else if (currentMode === 'emoji') {
+                const isTransparent = document.getElementById('emojiBgTransparent').checked;
+                if (!isTransparent) {
+                    ctx.fillStyle = document.getElementById('emojiBgColor').value;
+                    ctx.fillRect(0, 0, size, size);
+                }
+                const fontSize = Math.floor(size * 0.7);
+                ctx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(selectedEmoji, size / 2, size / 2);
+            }
+        }
+
+        function downloadPNG() {
+            const canvas = document.getElementById('previewCanvas');
+            DevToolkit.downloadFile(
+                canvas.toDataURL('image/png'),
+                `favicon-${currentSize}x${currentSize}.png`,
+                'image/png'
+            );
+        }
+
+        function downloadICO() {
+            const canvas = document.getElementById('previewCanvas');
+            const link = document.createElement('a');
+            link.download = 'favicon.ico';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            DevToolkit.Toast.success('已下载 favicon.ico 格式！');
+        }
+
+        window.addEventListener('load', () => {
+            initEmojiGrid();
+            generateFavicon();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="开发者工具箱 - 简洁、快速、实用的在线开发工具集合，包含中文转换、时间戳转换、Base64 编解码、JSON 格式化等实用工具"
+    />
+    <meta
+      name="keywords"
+      content="开发工具,在线工具,中文转换,时间戳,Base64,JSON,Favicon生成器,颜色转换"
+    />
+    <meta name="author" content="Dev Toolkit" />
+    <title>开发者工具箱 - 简洁实用的在线开发工具</title>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="开发者工具箱" />
+    <meta
+      property="og:description"
+      content="简洁、快速、实用的在线开发工具集合"
+    />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>"
+    />
+
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="assets/css/common.css" />
+
+    <style>
+      /* 首页特定样式 */
+      .hero-section {
+        text-align: center;
+        padding: 80px 20px 60px;
+        background: linear-gradient(
+          135deg,
+          var(--color-secondary) 0%,
+          var(--color-tertiary) 100%
+        );
+        border-radius: 30px;
+        margin-bottom: 60px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-section::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 216, 3, 0.2) 0%,
+          transparent 70%
+        );
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        50% {
+          transform: translate(-20px, -20px) rotate(10deg);
+        }
+      }
+
+      .hero-title {
+        font-size: 3.5em;
+        font-weight: 900;
+        color: var(--color-headline);
+        margin-bottom: 20px;
+        letter-spacing: -1px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero-subtitle {
+        font-size: 1.3em;
+        color: var(--color-paragraph);
+        margin-bottom: 40px;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero-stats {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        margin-top: 40px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero-stat {
+        text-align: center;
+      }
+
+      .hero-stat-number {
+        font-size: 2.5em;
+        font-weight: 700;
+        color: var(--color-headline);
+        margin-bottom: 5px;
+      }
+
+      .hero-stat-label {
+        font-size: 1em;
+        color: var(--color-paragraph);
+        opacity: 0.7;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .section-header h2 {
+        font-size: 2.2em;
+        color: var(--color-headline);
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .section-header p {
+        font-size: 1.1em;
+        color: var(--color-paragraph);
+        opacity: 0.8;
+      }
+
+      .search-box {
+        max-width: 600px;
+        margin: 0 auto 50px;
+        position: relative;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 16px 50px 16px 20px;
+        border: 2px solid var(--color-secondary);
+        border-radius: 50px;
+        font-size: 1.1em;
+        transition: all 0.3s;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--color-button);
+        box-shadow: 0 0 0 4px rgba(255, 216, 3, 0.1);
+      }
+
+      .search-icon {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.3em;
+        color: var(--color-paragraph);
+        opacity: 0.5;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        margin-bottom: 50px;
+      }
+
+      .feature-card {
+        background: white;
+        padding: 35px;
+        border-radius: 20px;
+        text-align: center;
+        border: 2px solid var(--color-secondary);
+        transition: all 0.3s;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px var(--color-shadow);
+      }
+
+      .feature-icon {
+        font-size: 3em;
+        margin-bottom: 20px;
+        display: block;
+      }
+
+      .feature-title {
+        font-size: 1.4em;
+        font-weight: 700;
+        color: var(--color-headline);
+        margin-bottom: 10px;
+      }
+
+      .feature-desc {
+        color: var(--color-paragraph);
+        opacity: 0.8;
+        line-height: 1.6;
+      }
+
+      .cta-section {
+        background: linear-gradient(
+          135deg,
+          var(--color-headline) 0%,
+          #1a1632 100%
+        );
+        color: white;
+        padding: 60px 40px;
+        border-radius: 30px;
+        text-align: center;
+        margin: 60px 0;
+      }
+
+      .cta-title {
+        font-size: 2.5em;
+        font-weight: 700;
+        margin-bottom: 20px;
+      }
+
+      .cta-subtitle {
+        font-size: 1.2em;
+        opacity: 0.9;
+        margin-bottom: 30px;
+      }
+
+      .cta-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .cta-btn {
+        padding: 16px 40px;
+        font-size: 1.1em;
+        font-weight: 600;
+        border-radius: 50px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .cta-btn-primary {
+        background: var(--color-button);
+        color: var(--color-button-text);
+      }
+
+      .cta-btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(255, 216, 3, 0.4);
+      }
+
+      .cta-btn-secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+      }
+
+      .cta-btn-secondary:hover {
+        background: white;
+        color: var(--color-headline);
+      }
+
+      @media (max-width: 768px) {
+        .hero-title {
+          font-size: 2.5em;
+        }
+
+        .hero-stats {
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .section-header h2 {
+          font-size: 1.8em;
+        }
+
+        .cta-title {
+          font-size: 2em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <span id="toastIcon">✓</span>
+      <span id="toastText"></span>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="logo">
+          <div class="logo-icon">🛠️</div>
+          <span data-i18n="nav.home">开发者工具箱</span>
+        </a>
+        <!-- 语言切换器 -->
+        <div class="lang-switcher">
+          <button class="lang-btn active" data-lang="zh-CN">简体</button>
+          <button class="lang-btn" data-lang="zh-TW">繁體</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+      <!-- Hero 区域 -->
+      <section class="hero-section">
+        <h1 class="hero-title" data-i18n="home.title">开发者工具箱</h1>
+        <p class="hero-subtitle" data-i18n="home.subtitle">
+          简洁、快速、实用的在线开发工具集合
+        </p>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-number">6+</div>
+            <div class="hero-stat-label">实用工具</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">Github</div>
+            <div class="hero-stat-label">开源代码</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">100%</div>
+            <div class="hero-stat-label">本地运行</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 搜索框 -->
+      <!-- <div class="search-box">
+            <input 
+                type="text" 
+                class="search-input" 
+                id="searchInput"
+                placeholder="搜索工具..."
+                oninput="searchTools()"
+            >
+            <span class="search-icon">🔍</span>
+        </div> -->
+
+      <!-- 工具列表 -->
+      <div class="section-header">
+        <h2>全部工具</h2>
+        <p>选择您需要的开发工具</p>
+      </div>
+
+      <div class="tools-grid" id="toolsGrid">
+        <!-- Favicon 生成器 -->
+        <a
+          href="tools/favicon.html"
+          class="tool-card"
+          data-keywords="favicon 图标 icon ico png"
+        >
+          <span class="tool-icon">🎨</span>
+          <h3 class="tool-title" data-i18n="tool.favicon.title">
+            Favicon 生成器
+          </h3>
+          <p class="tool-desc" data-i18n="tool.favicon.desc">
+            支持图片上传、文字、Emoji，多尺寸导出
+          </p>
+          <span class="tool-badge hot" data-i18n="badge.popular">热门</span>
+        </a>
+
+        <!-- 中文转换 -->
+        <a
+          href="tools/opencc.html"
+          class="tool-card"
+          data-keywords="中文 简体 繁体 转换 opencc"
+        >
+          <span class="tool-icon">🈯</span>
+          <h3 class="tool-title" data-i18n="tool.opencc.title">中文简繁转换</h3>
+          <p class="tool-desc" data-i18n="tool.opencc.desc">
+            支持简体、繁体、台湾、香港等多种转换模式
+          </p>
+          <span class="tool-badge new" data-i18n="badge.new">新</span>
+        </a>
+
+        <!-- 时间戳转换 -->
+        <a
+          href="tools/timestamp.html"
+          class="tool-card"
+          data-keywords="时间戳 timestamp unix 时间 日期"
+        >
+          <span class="tool-icon">⏰</span>
+          <h3 class="tool-title" data-i18n="tool.timestamp.title">
+            时间戳转换
+          </h3>
+          <p class="tool-desc" data-i18n="tool.timestamp.desc">
+            Unix、ISO、UTC 等多种时间格式互转
+          </p>
+          <span class="tool-badge hot" data-i18n="badge.popular">热门</span>
+        </a>
+
+        <!-- Base64 编解码 -->
+        <a
+          href="tools/base64.html"
+          class="tool-card"
+          data-keywords="base64 编码 解码 encode decode"
+        >
+          <span class="tool-icon">🔐</span>
+          <h3 class="tool-title" data-i18n="tool.base64.title">
+            Base64 编解码
+          </h3>
+          <p class="tool-desc" data-i18n="tool.base64.desc">
+            文本和图片的 Base64 编码解码工具
+          </p>
+        </a>
+
+        <!-- JSON 格式化 -->
+        <a
+          href="tools/json.html"
+          class="tool-card"
+          data-keywords="json 格式化 压缩 验证 format"
+        >
+          <span class="tool-icon">📋</span>
+          <h3 class="tool-title" data-i18n="tool.json.title">JSON 格式化</h3>
+          <p class="tool-desc" data-i18n="tool.json.desc">
+            格式化、压缩、验证 JSON 数据
+          </p>
+          <span class="tool-badge hot" data-i18n="badge.popular">热门</span>
+        </a>
+
+        <!-- 颜色转换 -->
+        <a
+          href="tools/color.html"
+          class="tool-card"
+          data-keywords="颜色 color hex rgb hsl 转换"
+        >
+          <span class="tool-icon">🎨</span>
+          <h3 class="tool-title" data-i18n="tool.color.title">颜色转换</h3>
+          <p class="tool-desc" data-i18n="tool.color.desc">
+            HEX、RGB、HSL 等颜色格式互转
+          </p>
+        </a>
+      </div>
+      <!-- 在工具列表后添加 -->
+      <div style="text-align: center; margin-top: 16px; margin-bottom: 80px">
+        <a
+          href="tools.html"
+          class="cta-btn cta-btn-primary"
+          style="display: inline-flex"
+        >
+          <span>📋</span>
+          <span>查看全部 8 个工具</span>
+        </a>
+      </div>
+
+      <!-- 特性展示 -->
+      <div class="section-header">
+        <h2>为什么选择我们</h2>
+        <p>专为开发者设计的实用工具集</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <h3 class="feature-title">快速高效</h3>
+          <p class="feature-desc">
+            纯前端实现，无需上传服务器，数据不离开浏览器，处理速度极快
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🔒</span>
+          <h3 class="feature-title">隐私安全</h3>
+          <p class="feature-desc">
+            所有数据本地处理，不会上传到任何服务器，保护您的隐私安全
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">📱</span>
+          <h3 class="feature-title">响应式设计</h3>
+          <p class="feature-desc">
+            完美适配桌面、平板、手机等各种设备，随时随地使用
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🎯</span>
+          <h3 class="feature-title">简洁易用</h3>
+          <p class="feature-desc">
+            界面简洁清爽，操作直观便捷，专注于工具本身的实用性
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">☢️</span>
+          <h3 class="feature-title">开源代码</h3>
+          <p class="feature-desc">
+            所有工具基于开源代码实现，只为开发更省心
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🌐</span>
+          <h3 class="feature-title">多语言支持</h3>
+          <p class="feature-desc">
+            支持简体中文、繁体中文、英文等多种语言，服务全球开发者
+          </p>
+        </div>
+      </div>
+
+      <!-- CTA 区域 -->
+      <section class="cta-section">
+        <h2 class="cta-title">准备好提升开发效率了吗？</h2>
+        <p class="cta-subtitle">一起玩点儿有趣的小工具</p>
+        <div class="cta-buttons">
+          <a href="#toolsGrid" class="cta-btn cta-btn-primary">
+            <span>🚀</span>
+            <span>开始使用</span>
+          </a>
+          <a
+            href="https://github.com/imwarn/we-tool"
+            class="cta-btn cta-btn-secondary"
+            target="_blank"
+          >
+            <span>⭐</span>
+            <span>Star on GitHub</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>
+        <a
+          href="https://imwarn.com"
+          target="_blank"
+          data-i18n="footer.github"
+          >imWarn</a
+        ><span data-i18n="footer.made">制作的小玩具</span> |
+        <a
+          href="https://github.com/imwarn/we-tool"
+          target="_blank"
+          data-i18n="footer.github"
+          >GitHub</a
+        >
+        |
+        <a
+          href="https://www.happyhues.co/palettes/14"
+          target="_blank"
+          data-i18n="footer.color"
+          >配色方案</a
+        >
+      </p>
+      <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.7">
+        © 2025 We Tool. All rights reserved.
+      </p>
+    </footer>
+
+    <!-- 公共脚本 -->
+    <script src="assets/js/common.js"></script>
+    <script src="assets/js/i18n.js"></script>
+
+    <script>
+      // 搜索工具
+      function searchTools() {
+        const input = document.getElementById("searchInput");
+        const filter = input.value.toLowerCase();
+        const cards = document.querySelectorAll(".tool-card");
+
+        cards.forEach((card) => {
+          const title = card
+            .querySelector(".tool-title")
+            .textContent.toLowerCase();
+          const desc = card
+            .querySelector(".tool-desc")
+            .textContent.toLowerCase();
+          const keywords = card.dataset.keywords || "";
+
+          if (
+            title.includes(filter) ||
+            desc.includes(filter) ||
+            keywords.includes(filter)
+          ) {
+            card.style.display = "block";
+            card.style.animation = "fadeIn 0.3s";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      }
+
+      // 平滑滚动
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        });
+      });
+
+      // 统计访问量（示例）
+      if (!localStorage.getItem("visited")) {
+        localStorage.setItem("visited", "true");
+        console.log("欢迎首次访问！");
+      }
+    </script>
+  </body>
+</html>

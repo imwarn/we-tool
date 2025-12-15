@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="JSON 格式化工具 - 格式化、压缩、验证、美化 JSON 数据">
+    <meta name="keywords" content="JSON格式化,JSON验证,JSON压缩,JSON美化,JSON工具">
+    <title>JSON 格式化 - 开发者工具箱</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/tool.css">
+    
+    <style>
+        .json-editor {
+            position: relative;
+        }
+
+        .line-numbers {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 50px;
+            padding: 12px 5px;
+            background: #f5f5f5;
+            border-right: 2px solid var(--color-secondary);
+            color: #999;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            user-select: none;
+            border-radius: 10px 0 0 10px;
+            overflow: hidden;
+        }
+
+        .json-textarea {
+            padding-left: 60px !important;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border-left: 4px solid var(--color-error);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error-title {
+            color: var(--color-error);
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-detail {
+            color: var(--color-paragraph);
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            white-space: pre-wrap;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-left: 4px solid var(--color-success);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-title {
+            color: var(--color-success);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 树形视图样式 */
+        .json-tree {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.8;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .json-tree-node {
+            margin-left: 20px;
+        }
+
+        .json-tree-line {
+            display: flex;
+            align-items: flex-start;
+            margin: 2px 0;
+        }
+
+        .json-tree-toggle {
+            cursor: pointer;
+            user-select: none;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            color: #888;
+            transition: all 0.2s;
+        }
+
+        .json-tree-toggle:hover {
+            color: #ffd803;
+            transform: scale(1.2);
+        }
+
+        .json-tree-toggle.collapsed::before {
+            content: '▶';
+        }
+
+        .json-tree-toggle.expanded::before {
+            content: '▼';
+        }
+
+        .json-tree-toggle.empty {
+            visibility: hidden;
+        }
+
+        .json-tree-content {
+            flex: 1;
+        }
+
+        .json-tree-children {
+            margin-left: 15px;
+            border-left: 1px dashed #555;
+            padding-left: 10px;
+        }
+
+        .json-tree-children.collapsed {
+            display: none;
+        }
+
+        .json-key {
+            color: #66d9ef;
+            font-weight: 600;
+        }
+
+        .json-string {
+            color: #a6e22e;
+        }
+
+        .json-number {
+            color: #ae81ff;
+        }
+
+        .json-boolean {
+            color: #fd971f;
+        }
+
+        .json-null {
+            color: #f92672;
+        }
+
+        .json-bracket {
+            color: #f8f8f2;
+            font-weight: bold;
+        }
+
+        .json-count {
+            color: #888;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+
+        .json-copy-btn {
+            color: #888;
+            cursor: pointer;
+            margin-left: 10px;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .json-tree-line:hover .json-copy-btn {
+            opacity: 1;
+        }
+
+        .json-copy-btn:hover {
+            color: #ffd803;
+        }
+
+        .indent-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .indent-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid var(--color-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .indent-btn.active {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+
+        .tree-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tree-control-btn {
+            padding: 6px 12px;
+            background: #3d3d3d;
+            color: #f8f8f2;
+            border: 1px solid #555;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .tree-control-btn:hover {
+            background: #4d4d4d;
+            border-color: #ffd803;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <div class="logo-icon">🛠️</div>
+                <span data-i18n="nav.home">开发者工具箱</span>
+            </a>
+            <a href="../index.html" class="back-btn">
+                <span>←</span>
+                <span data-i18n="common.back">返回首页</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">📋 JSON 格式化</h1>
+            <p class="page-subtitle">格式化、压缩、验证、美化 JSON 数据</p>
+        </div>
+
+        <!-- 操作面板 -->
+        <div class="tool-panel">
+            <h2 class="section-title">JSON 编辑器</h2>
+
+            <div class="indent-control">
+                <label style="font-weight: 600;">缩进空格：</label>
+                <button class="indent-btn" onclick="setIndent(2)">2</button>
+                <button class="indent-btn active" onclick="setIndent(4)">4</button>
+                <button class="indent-btn" onclick="setIndent(8)">8</button>
+                <label style="margin-left: 20px;">
+                    <input type="checkbox" id="sortKeys">
+                    <span style="margin-left: 5px;">排序键名</span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">输入 JSON</label>
+                <div class="json-editor">
+                    <div class="line-numbers" id="lineNumbers">1</div>
+                    <textarea 
+                        class="form-textarea json-textarea" 
+                        id="jsonInput" 
+                        placeholder='输入或粘贴 JSON 数据，例如：{"name": "张三", "age": 25}'
+                        style="min-height: 300px;"
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                <div class="error-title">
+                    <span>❌</span>
+                    <span>JSON 格式错误</span>
+                </div>
+                <div class="error-detail" id="errorDetail"></div>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <div class="success-title">
+                    <span>✓</span>
+                    <span>JSON 格式正确</span>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="formatJSON()">
+                    <span>✨</span>
+                    <span>格式化</span>
+                </button>
+                <button class="btn btn-success" onclick="compressJSON()">
+                    <span>📦</span>
+                    <span>压缩</span>
+                </button>
+                <button class="btn btn-success" onclick="validateJSON()">
+                    <span>✓</span>
+                    <span>验证</span>
+                </button>
+                <button class="btn btn-secondary" onclick="copyJSON()">
+                    <span>📋</span>
+                    <span>复制</span>
+                </button>
+                <button class="btn btn-secondary" onclick="clearJSON()">
+                    <span>🗑️</span>
+                    <span>清空</span>
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="jsonSize">0 B</div>
+                    <div class="stat-label">数据大小</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="jsonLines">0</div>
+                    <div class="stat-label">行数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="jsonDepth">0</div>
+                    <div class="stat-label">嵌套深度</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="jsonKeys">0</div>
+                    <div class="stat-label">键数量</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 可视化树形结构 -->
+        <div class="tool-panel">
+            <h2 class="section-title">树形视图</h2>
+            
+            <div class="tree-controls">
+                <button class="tree-control-btn" onclick="expandAll()">
+                    <span>📂</span> 全部展开
+                </button>
+                <button class="tree-control-btn" onclick="collapseAll()">
+                    <span>📁</span> 全部折叠
+                </button>
+                <button class="tree-control-btn" onclick="expandLevel(1)">
+                    展开 1 层
+                </button>
+                <button class="tree-control-btn" onclick="expandLevel(2)">
+                    展开 2 层
+                </button>
+                <button class="tree-control-btn" onclick="expandLevel(3)">
+                    展开 3 层
+                </button>
+            </div>
+
+            <div class="json-tree" id="jsonTree">
+                <div style="opacity: 0.5; text-align: center; padding: 40px;">
+                    输入 JSON 数据后，这里将显示树形结构
+                </div>
+            </div>
+        </div>
+
+        <!-- 示例 JSON -->
+        <div class="tool-panel">
+            <h2 class="section-title">示例 JSON</h2>
+            <div class="grid-3">
+                <button class="btn btn-secondary" onclick="loadExample('simple')">
+                    <span>📝</span>
+                    <span>简单对象</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadExample('array')">
+                    <span>📚</span>
+                    <span>数组数据</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadExample('nested')">
+                    <span>🏗️</span>
+                    <span>嵌套结构</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadExample('api')">
+                    <span>🌐</span>
+                    <span>API 响应</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadExample('config')">
+                    <span>⚙️</span>
+                    <span>配置文件</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadExample('complex')">
+                    <span>🎯</span>
+                    <span>复杂数据</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="info-box">
+            <h4>💡 使用说明</h4>
+            <ul>
+                <li><strong>格式化</strong>：美化 JSON，使其易于阅读</li>
+                <li><strong>压缩</strong>：移除空格和换行，减小文件大小</li>
+                <li><strong>验证</strong>：检查 JSON 格式是否正确</li>
+                <li><strong>树形视图</strong>：可折叠的树形结构，点击 ▶/▼ 展开/折叠</li>
+                <li><strong>快速复制</strong>：鼠标悬停在树形节点上，点击 📋 复制该值</li>
+                <li><strong>快捷键</strong>：Ctrl+Enter 格式化，Ctrl+Shift+C 压缩</li>
+            </ul>
+        </div>
+
+        <div class="info-box warning">
+            <h4>⚠️ 常见错误</h4>
+            <ul>
+                <li><strong>缺少引号</strong>：键名必须用双引号包裹，如 "name"</li>
+                <li><strong>多余逗号</strong>：数组或对象最后一项后不能有逗号</li>
+                <li><strong>单引号</strong>：JSON 标准只支持双引号，不支持单引号</li>
+                <li><strong>注释</strong>：标准 JSON 不支持注释</li>
+                <li><strong>特殊字符</strong>：需要转义，如 \n \t \"</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 公共脚本 -->
+    <script src="../assets/js/common.js"></script>
+
+    <script>
+        let currentIndent = 4;
+        let jsonData = null;
+
+        // 示例数据
+        const examples = {
+            simple: {
+                name: "张三",
+                age: 25,
+                city: "北京",
+                active: true
+            },
+            array: {
+                users: [
+                    { id: 1, name: "张三", email: "zhang@example.com" },
+                    { id: 2, name: "李四", email: "li@example.com" },
+                    { id: 3, name: "王五", email: "wang@example.com" }
+                ]
+            },
+            nested: {
+                company: {
+                    name: "科技公司",
+                    address: {
+                        country: "中国",
+                        city: "北京",
+                        street: "中关村大街1号"
+                    },
+                    departments: [
+                        {
+                            name: "技术部",
+                            employees: 50
+                        },
+                        {
+                            name: "市场部",
+                            employees: 30
+                        }
+                    ]
+                }
+            },
+            api: {
+                code: 200,
+                message: "success",
+                data: {
+                    total: 100,
+                    page: 1,
+                    pageSize: 10,
+                    items: [
+                        { id: 1, title: "示例1" },
+                        { id: 2, title: "示例2" }
+                    ]
+                },
+                timestamp: 1234567890
+            },
+            config: {
+                server: {
+                    host: "localhost",
+                    port: 3000,
+                    ssl: false
+                },
+                database: {
+                    type: "mongodb",
+                    url: "mongodb://localhost:27017",
+                    name: "mydb"
+                },
+                cache: {
+                    enabled: true,
+                    ttl: 3600
+                }
+            },
+            complex: {
+                version: "1.0.0",
+                metadata: {
+                    author: "开发者",
+                    created: "2024-01-01",
+                    tags: ["json", "tool", "formatter"]
+                },
+                features: [
+                    {
+                        name: "格式化",
+                        enabled: true,
+                        options: {
+                            indent: 4,
+                            sortKeys: false
+                        }
+                    },
+                    {
+                        name: "压缩",
+                        enabled: true,
+                        options: null
+                    }
+                ],
+                settings: {
+                    theme: "dark",
+                    fontSize: 14,
+                    autoSave: true,
+                    shortcuts: {
+                        format: "Ctrl+Enter",
+                        compress: "Ctrl+Shift+C"
+                    }
+                }
+            }
+        };
+
+        // 更新行号
+        function updateLineNumbers() {
+            const textarea = document.getElementById('jsonInput');
+            const lines = textarea.value.split('\n').length;
+            const lineNumbers = document.getElementById('lineNumbers');
+            lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+        }
+
+        // 输入监听
+        document.getElementById('jsonInput').addEventListener('input', function() {
+            updateLineNumbers();
+            updateStats();
+        });
+
+        document.getElementById('jsonInput').addEventListener('scroll', function() {
+            document.getElementById('lineNumbers').scrollTop = this.scrollTop;
+        });
+
+        // 快捷键
+        document.getElementById('jsonInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                formatJSON();
+            } else if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                compressJSON();
+            }
+        });
+
+        // 设置缩进
+        function setIndent(spaces) {
+            currentIndent = spaces;
+            document.querySelectorAll('.indent-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 格式化 JSON
+        function formatJSON() {
+            const input = document.getElementById('jsonInput').value.trim();
+            
+            if (!input) {
+                DevToolkit.Toast.warning('请输入 JSON 数据');
+                return;
+            }
+
+            try {
+                jsonData = JSON.parse(input);
+                const sortKeys = document.getElementById('sortKeys').checked;
+                
+                let formatted;
+                if (sortKeys) {
+                    formatted = JSON.stringify(sortObject(jsonData), null, currentIndent);
+                } else {
+                    formatted = JSON.stringify(jsonData, null, currentIndent);
+                }
+                
+                document.getElementById('jsonInput').value = formatted;
+                updateLineNumbers();
+                updateStats();
+                updateTreeView(jsonData);
+                showSuccess();
+                DevToolkit.Toast.success('格式化成功！');
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        // 压缩 JSON
+        function compressJSON() {
+            const input = document.getElementById('jsonInput').value.trim();
+            
+            if (!input) {
+                DevToolkit.Toast.warning('请输入 JSON 数据');
+                return;
+            }
+
+            try {
+                jsonData = JSON.parse(input);
+                const compressed = JSON.stringify(jsonData);
+                document.getElementById('jsonInput').value = compressed;
+                updateLineNumbers();
+                updateStats();
+                showSuccess();
+                DevToolkit.Toast.success('压缩成功！');
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        // 验证 JSON
+        function validateJSON() {
+            const input = document.getElementById('jsonInput').value.trim();
+            
+            if (!input) {
+                DevToolkit.Toast.warning('请输入 JSON 数据');
+                return;
+            }
+
+            try {
+                jsonData = JSON.parse(input);
+                updateTreeView(jsonData);
+                showSuccess();
+                DevToolkit.Toast.success('✓ JSON 格式正确！');
+            } catch (e) {
+                showError(e);
+                DevToolkit.Toast.error('JSON 格式错误');
+            }
+        }
+
+        // 复制 JSON
+        function copyJSON() {
+            const value = document.getElementById('jsonInput').value;
+            if (!value) {
+                DevToolkit.Toast.warning('没有可复制的内容');
+                return;
+            }
+            DevToolkit.copyToClipboard(value);
+        }
+
+        // 清空
+        function clearJSON() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('jsonTree').innerHTML = '<div style="opacity: 0.5; text-align: center; padding: 40px;">输入 JSON 数据后，这里将显示树形结构</div>';
+            updateLineNumbers();
+            updateStats();
+            hideMessages();
+        }
+
+        // 加载示例
+        function loadExample(type) {
+            const example = examples[type];
+            document.getElementById('jsonInput').value = JSON.stringify(example, null, currentIndent);
+            updateLineNumbers();
+            updateStats();
+            updateTreeView(example);
+            hideMessages();
+            DevToolkit.Toast.info('已加载示例数据');
+        }
+
+        // 更新统计
+        function updateStats() {
+            const value = document.getElementById('jsonInput').value;
+            const size = new Blob([value]).size;
+            const lines = value.split('\n').length;
+            
+            document.getElementById('jsonSize').textContent = DevToolkit.formatFileSize(size);
+            document.getElementById('jsonLines').textContent = lines;
+
+            try {
+                const data = JSON.parse(value);
+                document.getElementById('jsonDepth').textContent = getDepth(data);
+                document.getElementById('jsonKeys').textContent = countKeys(data);
+            } catch (e) {
+                document.getElementById('jsonDepth').textContent = '-';
+                document.getElementById('jsonKeys').textContent = '-';
+            }
+        }
+
+        // 计算深度
+        function getDepth(obj, depth = 0) {
+            if (obj === null || typeof obj !== 'object') return depth;
+            const depths = Object.values(obj).map(value => getDepth(value, depth + 1));
+            return Math.max(depth, ...depths);
+        }
+
+        // 计算键数量
+        function countKeys(obj) {
+            if (obj === null || typeof obj !== 'object') return 0;
+            let count = Object.keys(obj).length;
+            Object.values(obj).forEach(value => {
+                count += countKeys(value);
+            });
+            return count;
+        }
+
+        // 排序对象
+        function sortObject(obj) {
+            if (Array.isArray(obj)) {
+                return obj.map(sortObject);
+            } else if (obj !== null && typeof obj === 'object') {
+                return Object.keys(obj).sort().reduce((result, key) => {
+                    result[key] = sortObject(obj[key]);
+                    return result;
+                }, {});
+            }
+            return obj;
+        }
+
+        // ========== 树形视图核心功能 ==========
+        let treeNodeId = 0;
+
+        function updateTreeView(data) {
+            treeNodeId = 0;
+            const tree = document.getElementById('jsonTree');
+            tree.innerHTML = '';
+            tree.appendChild(createTreeNode(data, 'root', null, 0));
+        }
+
+        function createTreeNode(value, key, parentPath, level) {
+            const nodeId = `node-${treeNodeId++}`;
+            const path = parentPath ? `${parentPath}.${key}` : key;
+            
+            const line = document.createElement('div');
+            line.className = 'json-tree-line';
+            
+            // 切换按钮
+            const toggle = document.createElement('span');
+            toggle.className = 'json-tree-toggle';
+            
+            // 内容区域
+            const content = document.createElement('span');
+            content.className = 'json-tree-content';
+            
+            if (value === null) {
+                toggle.classList.add('empty');
+                content.innerHTML = renderKey(key) + ': ' + renderValue(null, 'null');
+            } else if (typeof value === 'object') {
+                const isArray = Array.isArray(value);
+                const entries = isArray ? value : Object.entries(value);
+                const count = isArray ? value.length : Object.keys(value).length;
+                
+                if (count === 0) {
+                    toggle.classList.add('empty');
+                    content.innerHTML = renderKey(key) + ': ' + 
+                        `<span class="json-bracket">${isArray ? '[]' : '{}'}</span>`;
+                } else {
+                    toggle.classList.add(level < 2 ? 'expanded' : 'collapsed');
+                    toggle.dataset.nodeId = nodeId;
+                    toggle.onclick = () => toggleNode(nodeId);
+                    
+                    const openBracket = isArray ? '[' : '{';
+                    const closeBracket = isArray ? ']' : '}';
+                    
+                    content.innerHTML = renderKey(key) + ': ' +
+                        `<span class="json-bracket">${openBracket}</span>` +
+                        `<span class="json-count">${count} ${isArray ? 'items' : 'keys'}</span>`;
+                    
+                    // 子节点容器
+                    const children = document.createElement('div');
+                    children.className = 'json-tree-children';
+                    children.id = nodeId;
+                    children.dataset.level = level;
+                    
+                    if (level >= 2) {
+                        children.classList.add('collapsed');
+                    }
+                    
+                    // 添加子节点
+                    if (isArray) {
+                        value.forEach((item, index) => {
+                            children.appendChild(createTreeNode(item, `[${index}]`, path, level + 1));
+                        });
+                    } else {
+                        Object.entries(value).forEach(([k, v]) => {
+                            children.appendChild(createTreeNode(v, k, path, level + 1));
+                        });
+                    }
+                    
+                    // 添加关闭括号
+                    const closeLine = document.createElement('div');
+                    closeLine.className = 'json-tree-line';
+                    closeLine.innerHTML = `<span class="json-bracket">${closeBracket}</span>`;
+                    children.appendChild(closeLine);
+                    
+                    line.appendChild(toggle);
+                    line.appendChild(content);
+                    
+                    const container = document.createElement('div');
+                    container.appendChild(line);
+                    container.appendChild(children);
+                    
+                    return container;
+                }
+            } else {
+                toggle.classList.add('empty');
+                const valueType = typeof value;
+                content.innerHTML = renderKey(key) + ': ' + renderValue(value, valueType);
+                
+                // 添加复制按钮
+                const copyBtn = document.createElement('span');
+                copyBtn.className = 'json-copy-btn';
+                copyBtn.innerHTML = '📋';
+                copyBtn.title = '复制值';
+                copyBtn.onclick = () => {
+                    DevToolkit.copyToClipboard(JSON.stringify(value));
+                };
+                content.appendChild(copyBtn);
+            }
+            
+            line.appendChild(toggle);
+            line.appendChild(content);
+            
+            return line;
+        }
+
+        function renderKey(key) {
+            if (key === 'root') return '';
+            if (key.startsWith('[')) return `<span class="json-key">${key}</span>`;
+            return `<span class="json-key">"${key}"</span>`;
+        }
+
+        function renderValue(value, type) {
+            if (value === null) {
+                return `<span class="json-null">null</span>`;
+            }
+            
+            switch (type) {
+                case 'string':
+                    return `<span class="json-string">"${escapeHtml(value)}"</span>`;
+                case 'number':
+                    return `<span class="json-number">${value}</span>`;
+                case 'boolean':
+                    return `<span class="json-boolean">${value}</span>`;
+                default:
+                    return String(value);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function toggleNode(nodeId) {
+            const node = document.getElementById(nodeId);
+            const toggle = document.querySelector(`[data-node-id="${nodeId}"]`);
+            
+            if (node.classList.contains('collapsed')) {
+                node.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+                toggle.classList.add('expanded');
+            } else {
+                node.classList.add('collapsed');
+                toggle.classList.remove('expanded');
+                toggle.classList.add('collapsed');
+            }
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.json-tree-children').forEach(node => {
+                node.classList.remove('collapsed');
+            });
+            document.querySelectorAll('.json-tree-toggle').forEach(toggle => {
+                toggle.classList.remove('collapsed');
+                toggle.classList.add('expanded');
+            });
+            DevToolkit.Toast.success('已全部展开');
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.json-tree-children').forEach(node => {
+                node.classList.add('collapsed');
+            });
+            document.querySelectorAll('.json-tree-toggle').forEach(toggle => {
+                toggle.classList.remove('expanded');
+                toggle.classList.add('collapsed');
+            });
+            DevToolkit.Toast.success('已全部折叠');
+        }
+
+        function expandLevel(maxLevel) {
+            document.querySelectorAll('.json-tree-children').forEach(node => {
+                const level = parseInt(node.dataset.level);
+                if (level < maxLevel) {
+                    node.classList.remove('collapsed');
+                    const toggle = document.querySelector(`[data-node-id="${node.id}"]`);
+                    if (toggle) {
+                        toggle.classList.remove('collapsed');
+                        toggle.classList.add('expanded');
+                    }
+                } else {
+                    node.classList.add('collapsed');
+                    const toggle = document.querySelector(`[data-node-id="${node.id}"]`);
+                    if (toggle) {
+                        toggle.classList.remove('expanded');
+                        toggle.classList.add('collapsed');
+                    }
+                }
+            });
+            DevToolkit.Toast.success(`已展开 ${maxLevel} 层`);
+        }
+
+        // 显示错误
+        function showError(error) {
+            hideMessages();
+            const errorMessage = document.getElementById('errorMessage');
+            const errorDetail = document.getElementById('errorDetail');
+            
+            let detail = error.message;
+            if (error.message.includes('position')) {
+                const match = error.message.match(/position (\d+)/);
+                if (match) {
+                    const pos = parseInt(match[1]);
+                    const input = document.getElementById('jsonInput').value;
+                    const before = input.substring(Math.max(0, pos - 20), pos);
+                    const after = input.substring(pos, Math.min(input.length, pos + 20));
+                    detail += `\n\n附近内容：\n...${before}❌${after}...`;
+                }
+            }
+            
+            errorDetail.textContent = detail;
+            errorMessage.classList.add('show');
+        }
+
+        // 显示成功
+        function showSuccess() {
+            hideMessages();
+            document.getElementById('successMessage').classList.add('show');
+        }
+
+        // 隐藏消息
+        function hideMessages() {
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        // 初始化
+        updateLineNumbers();
+        loadExample('simple');
+    </script>
+</body>
+</html>

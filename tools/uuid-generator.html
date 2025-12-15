@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UUID 生成器 - 支持 UUID v1, v4, v7, Nil UUID, GUID 等多种格式">
+    <meta name="keywords" content="UUID生成器,GUID生成器,UUID,GUID,唯一标识符">
+    <title>UUID 生成器 - 开发者工具箱</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🆔</text></svg>">
+    
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/tool.css">
+    
+    <style>
+        .uuid-showcase {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-tertiary) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .uuid-showcase::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 216, 3, 0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .uuid-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .uuid-display {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--color-headline);
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 600px;
+            word-break: break-all;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .uuid-display:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .uuid-display.has-uuid:hover {
+            background: var(--color-tertiary);
+        }
+
+        .uuid-display.empty {
+            color: var(--color-paragraph);
+            opacity: 0.7;
+            font-size: 1.2em;
+        }
+
+        .uuid-display.empty:hover {
+            background: rgba(255, 216, 3, 0.1);
+        }
+
+        .uuid-subtitle {
+            font-size: 1.1em;
+            color: var(--color-paragraph);
+            opacity: 0.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* UUID 版本选择器 */
+        .uuid-version-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .uuid-version-card {
+            background: white;
+            border: 2px solid var(--color-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .uuid-version-card:hover {
+            border-color: var(--color-tertiary);
+            background: var(--color-secondary);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .uuid-version-card.active {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+
+        .uuid-version-card.active .version-name,
+        .uuid-version-card.active .version-desc {
+            color: var(--color-button-text);
+        }
+
+        .version-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .version-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--color-headline);
+            margin-bottom: 8px;
+        }
+
+        .version-desc {
+            font-size: 0.85em;
+            color: var(--color-paragraph);
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        /* 生成数量选择器 */
+        .quantity-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .quantity-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid var(--color-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: var(--color-paragraph);
+        }
+
+        .quantity-btn:hover {
+            border-color: var(--color-tertiary);
+            background: var(--color-secondary);
+        }
+
+        .quantity-btn.active {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+
+        .quantity-input {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid var(--color-secondary);
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* UUID 列表 */
+        .uuid-list {
+            background: var(--color-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .uuid-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .uuid-list::-webkit-scrollbar-track {
+            background: white;
+            border-radius: 4px;
+        }
+
+        .uuid-list::-webkit-scrollbar-thumb {
+            background: var(--color-button);
+            border-radius: 4px;
+        }
+
+        .uuid-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        .uuid-item:hover {
+            background: var(--color-tertiary);
+            transform: translateX(4px);
+        }
+
+        .uuid-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .uuid-value {
+            flex: 1;
+            color: var(--color-headline);
+            font-weight: 600;
+            word-break: break-all;
+            margin-right: 10px;
+        }
+
+        .uuid-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .uuid-action-btn {
+            padding: 6px 12px;
+            background: var(--color-secondary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+        }
+
+        .uuid-action-btn:hover {
+            background: var(--color-button);
+            transform: scale(1.1);
+        }
+
+        /* 格式选项 */
+        .format-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .format-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: white;
+            border: 2px solid var(--color-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .format-option:hover {
+            border-color: var(--color-tertiary);
+            background: var(--color-secondary);
+        }
+
+        .format-option.active {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+
+        .format-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .format-label {
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 统计信息 */
+        .uuid-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .uuid-stat-card {
+            background: linear-gradient(135deg, var(--color-secondary) 0%, rgba(254, 250, 224, 0.5) 100%);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid var(--color-tertiary);
+        }
+
+        .uuid-stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--color-button);
+            font-family: 'Courier New', monospace;
+        }
+
+        .uuid-stat-label {
+            font-size: 0.85em;
+            color: var(--color-paragraph);
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--color-paragraph);
+            opacity: 0.6;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .uuid-display {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+
+            .uuid-version-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .quantity-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .quantity-btn,
+            .quantity-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <div class="logo-icon">🛠️</div>
+                <span data-i18n="nav.home">开发者工具箱</span>
+            </a>
+            <a href="../index.html" class="back-btn">
+                <span>←</span>
+                <span data-i18n="common.back">返回首页</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">🆔 UUID 生成器</h1>
+            <p class="page-subtitle">快速生成 UUID v1, v4, v7, Nil UUID 等多种格式</p>
+        </div>
+
+        <!-- UUID 展示区 -->
+        <div class="uuid-showcase">
+            <div class="uuid-icon">🆔</div>
+            <div class="uuid-display empty" id="featuredUUID" onclick="handleFeaturedClick()">
+                点击下方"生成 UUID"按钮开始 ✨
+            </div>
+            <div class="uuid-subtitle" id="featuredHint">点击上方区域可快速生成</div>
+        </div>
+
+        <!-- UUID 生成配置 -->
+        <div class="tool-panel">
+            <h2 class="section-title">生成配置</h2>
+
+            <div class="form-group">
+                <label class="form-label">选择 UUID 版本</label>
+                <div class="uuid-version-selector">
+                    <div class="uuid-version-card active" onclick="selectUUIDVersion('v4', this)">
+                        <div class="version-icon">🎲</div>
+                        <div class="version-name">UUID v4</div>
+                        <div class="version-desc">随机生成，最常用</div>
+                    </div>
+                    <div class="uuid-version-card" onclick="selectUUIDVersion('v1', this)">
+                        <div class="version-icon">⏰</div>
+                        <div class="version-name">UUID v1</div>
+                        <div class="version-desc">基于时间戳和 MAC</div>
+                    </div>
+                    <div class="uuid-version-card" onclick="selectUUIDVersion('v7', this)">
+                        <div class="version-icon">📅</div>
+                        <div class="version-name">UUID v7</div>
+                        <div class="version-desc">时间排序，新标准</div>
+                    </div>
+                    <div class="uuid-version-card" onclick="selectUUIDVersion('nil', this)">
+                        <div class="version-icon">⭕</div>
+                        <div class="version-name">Nil UUID</div>
+                        <div class="version-desc">全零占位符</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">生成数量</label>
+                <div class="quantity-selector">
+                    <button class="quantity-btn active" onclick="selectQuantity(1, this)">1 个</button>
+                    <button class="quantity-btn" onclick="selectQuantity(5, this)">5 个</button>
+                    <button class="quantity-btn" onclick="selectQuantity(10, this)">10 个</button>
+                    <button class="quantity-btn" onclick="selectQuantity(50, this)">50 个</button>
+                    <button class="quantity-btn" onclick="selectQuantity(100, this)">100 个</button>
+                    <input 
+                        type="number" 
+                        class="quantity-input" 
+                        id="customQuantity"
+                        min="1" 
+                        max="1000" 
+                        placeholder="自定义"
+                        onchange="selectQuantity(parseInt(this.value), this)"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">输出格式</label>
+                <div class="format-options">
+                    <div class="format-option active" onclick="toggleFormat('lowercase', this)">
+                        <input type="checkbox" class="format-checkbox" id="lowercase" checked>
+                        <label class="format-label" for="lowercase">小写</label>
+                    </div>
+                    <div class="format-option" onclick="toggleFormat('uppercase', this)">
+                        <input type="checkbox" class="format-checkbox" id="uppercase">
+                        <label class="format-label" for="uppercase">大写</label>
+                    </div>
+                    <div class="format-option" onclick="toggleFormat('braces', this)">
+                        <input type="checkbox" class="format-checkbox" id="braces">
+                        <label class="format-label" for="braces">花括号 {}</label>
+                    </div>
+                    <div class="format-option" onclick="toggleFormat('noDashes', this)">
+                        <input type="checkbox" class="format-checkbox" id="noDashes">
+                        <label class="format-label" for="noDashes">无连字符</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="generateUUIDs()">
+                    <span>🎲</span>
+                    <span>生成 UUID</span>
+                </button>
+                <button class="btn btn-secondary" onclick="clearUUIDs()">
+                    <span>🗑️</span>
+                    <span>清空列表</span>
+                </button>
+                <button class="btn btn-secondary" onclick="copyAllUUIDs()">
+                    <span>📋</span>
+                    <span>复制全部</span>
+                </button>
+                <button class="btn btn-secondary" onclick="downloadUUIDs()">
+                    <span>💾</span>
+                    <span>下载为文本</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- UUID 列表 -->
+        <div class="tool-panel">
+            <h2 class="section-title">生成结果</h2>
+
+            <div id="uuidListContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <div>暂无 UUID，点击上方"生成 UUID"按钮开始</div>
+                </div>
+            </div>
+
+            <div class="uuid-stats">
+                <div class="uuid-stat-card">
+                    <div class="uuid-stat-value" id="totalCount">0</div>
+                    <div class="uuid-stat-label">已生成总数</div>
+                </div>
+                <div class="uuid-stat-card">
+                    <div class="uuid-stat-value" id="currentVersion">v4</div>
+                    <div class="uuid-stat-label">当前版本</div>
+                </div>
+                <div class="uuid-stat-card">
+                    <div class="uuid-stat-value" id="listCount">0</div>
+                    <div class="uuid-stat-label">列表数量</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UUID 说明 -->
+        <div class="tool-panel">
+            <h2 class="section-title">UUID 版本说明</h2>
+
+            <div class="info-box">
+                <h4>🎲 UUID v4 (Random)</h4>
+                <ul>
+                    <li><strong>生成方式</strong>：完全随机生成</li>
+                    <li><strong>格式</strong>：xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</li>
+                    <li><strong>特点</strong>：最常用，无需额外信息，碰撞概率极低</li>
+                    <li><strong>使用场景</strong>：数据库主键、会话ID、临时标识符</li>
+                    <li><strong>示例</strong>：550e8400-e29b-41d4-a716-446655440000</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>⏰ UUID v1 (Time-based)</h4>
+                <ul>
+                    <li><strong>生成方式</strong>：基于时间戳 + MAC 地址 + 随机数</li>
+                    <li><strong>格式</strong>：xxxxxxxx-xxxx-1xxx-yxxx-xxxxxxxxxxxx</li>
+                    <li><strong>特点</strong>：可追溯时间，按时间排序，可能泄露 MAC 地址</li>
+                    <li><strong>使用场景</strong>：需要时间排序的场景</li>
+                    <li><strong>注意</strong>：Web 环境无法获取真实 MAC，使用随机值代替</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>📅 UUID v7 (Unix Timestamp)</h4>
+                <ul>
+                    <li><strong>生成方式</strong>：基于 Unix 时间戳 + 随机数</li>
+                    <li><strong>格式</strong>：xxxxxxxx-xxxx-7xxx-yxxx-xxxxxxxxxxxx</li>
+                    <li><strong>特点</strong>：时间排序，数据库友好，新标准（RFC 9562）</li>
+                    <li><strong>优势</strong>：比 v1 更简洁，不泄露 MAC，索引效率高</li>
+                    <li><strong>使用场景</strong>：现代应用推荐使用</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>⭕ Nil UUID</h4>
+                <ul>
+                    <li><strong>格式</strong>：00000000-0000-0000-0000-000000000000</li>
+                    <li><strong>用途</strong>：空值占位符，表示"无效"或"未设置"</li>
+                    <li><strong>使用场景</strong>：初始化、默认值、占位符</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="info-box">
+            <h4>💡 使用说明</h4>
+            <ul>
+                <li><strong>版本选择</strong>：根据使用场景选择合适的 UUID 版本</li>
+                <li><strong>批量生成</strong>：支持一次生成最多 1000 个 UUID</li>
+                <li><strong>格式化</strong>：支持大小写、花括号、无连字符等多种格式</li>
+                <li><strong>快速生成</strong>：点击顶部展示区域可快速生成单个 UUID</li>
+                <li><strong>快速复制</strong>：生成后点击展示区域或列表项即可复制</li>
+                <li><strong>批量操作</strong>：支持复制全部、下载为文本文件</li>
+                <li><strong>推荐使用</strong>：一般情况下推荐使用 UUID v4 或 v7</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 公共脚本 -->
+    <script src="../assets/js/common.js"></script>
+
+    <script>
+        let currentVersion = 'v4';
+        let currentQuantity = 1;
+        let generatedUUIDs = [];
+        let totalGenerated = 0;
+        let hasGenerated = false; // 新增：标记是否已生成过
+
+        // UUID 生成函数
+        function generateUUIDv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function generateUUIDv1() {
+            const timestamp = new Date().getTime();
+            const timeLow = (timestamp & 0xffffffff).toString(16).padStart(8, '0');
+            const timeMid = ((timestamp / 0x100000000) & 0xffff).toString(16).padStart(4, '0');
+            const timeHi = (((timestamp / 0x1000000000000) & 0x0fff) | 0x1000).toString(16).padStart(4, '0');
+            const clockSeq = ((Math.random() * 0x3fff) | 0x8000).toString(16).padStart(4, '0');
+            const node = Array.from({length: 12}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+            
+            return `${timeLow}-${timeMid}-${timeHi}-${clockSeq}-${node}`;
+        }
+
+        function generateUUIDv7() {
+            const timestamp = Date.now();
+            const timestampHex = timestamp.toString(16).padStart(12, '0');
+            const randomHex = Array.from({length: 20}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+            
+            const uuid = timestampHex + randomHex;
+            const formatted = uuid.slice(0, 8) + '-' + uuid.slice(8, 12) + '-7' + uuid.slice(13, 16) + 
+                            '-' + (parseInt(uuid.slice(16, 17), 16) & 0x3 | 0x8).toString(16) + uuid.slice(17, 20) + 
+                            '-' + uuid.slice(20);
+            
+            return formatted;
+        }
+
+        function generateNilUUID() {
+            return '00000000-0000-0000-0000-000000000000';
+        }
+
+        // 格式化 UUID
+        function formatUUID(uuid) {
+            const lowercase = document.getElementById('lowercase').checked;
+            const uppercase = document.getElementById('uppercase').checked;
+            const braces = document.getElementById('braces').checked;
+            const noDashes = document.getElementById('noDashes').checked;
+
+            let result = uuid;
+
+            // 大小写
+            if (uppercase) {
+                result = result.toUpperCase();
+            } else if (lowercase) {
+                result = result.toLowerCase();
+            }
+
+            // 移除连字符
+            if (noDashes) {
+                result = result.replace(/-/g, '');
+            }
+
+            // 添加花括号
+            if (braces) {
+                result = '{' + result + '}';
+            }
+
+            return result;
+        }
+
+        // 生成 UUID
+        function generateUUID() {
+            let uuid;
+            switch(currentVersion) {
+                case 'v1':
+                    uuid = generateUUIDv1();
+                    break;
+                case 'v4':
+                    uuid = generateUUIDv4();
+                    break;
+                case 'v7':
+                    uuid = generateUUIDv7();
+                    break;
+                case 'nil':
+                    uuid = generateNilUUID();
+                    break;
+                default:
+                    uuid = generateUUIDv4();
+            }
+            return formatUUID(uuid);
+        }
+
+        // 处理展示区点击
+        function handleFeaturedClick() {
+            const displayElement = document.getElementById('featuredUUID');
+            
+            if (!hasGenerated) {
+                // 如果还没生成过，执行快速生成
+                currentQuantity = 1;
+                generateUUIDs();
+                DevToolkit.Toast.info('已为您快速生成一个 UUID！');
+            } else {
+                // 如果已生成过，执行复制
+                const uuid = displayElement.textContent;
+                DevToolkit.copyToClipboard(uuid);
+            }
+        }
+
+        // 生成多个 UUID
+        function generateUUIDs() {
+            if (currentQuantity < 1 || currentQuantity > 1000) {
+                DevToolkit.Toast.error('生成数量必须在 1-1000 之间');
+                return;
+            }
+
+            const newUUIDs = [];
+            for (let i = 0; i < currentQuantity; i++) {
+                newUUIDs.push(generateUUID());
+            }
+
+            generatedUUIDs = [...newUUIDs, ...generatedUUIDs];
+            totalGenerated += newUUIDs.length;
+            hasGenerated = true; // 标记已生成
+
+            // 更新展示区
+            const displayElement = document.getElementById('featuredUUID');
+            displayElement.textContent = newUUIDs[0];
+            displayElement.classList.remove('empty');
+            displayElement.classList.add('has-uuid');
+            
+            // 更新提示文本
+            document.getElementById('featuredHint').textContent = '点击 UUID 即可复制';
+
+            // 更新列表
+            renderUUIDList();
+            updateStats();
+
+            DevToolkit.Toast.success(`成功生成 ${newUUIDs.length} 个 UUID！`);
+        }
+
+        // 渲染 UUID 列表
+        function renderUUIDList() {
+            const container = document.getElementById('uuidListContainer');
+            
+            if (generatedUUIDs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div>暂无 UUID，点击上方"生成 UUID"按钮开始</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const listHTML = `
+                <div class="uuid-list">
+                    ${generatedUUIDs.map((uuid, index) => `
+                        <div class="uuid-item">
+                            <div class="uuid-value">${uuid}</div>
+                            <div class="uuid-actions">
+                                <button class="uuid-action-btn" onclick="copyUUID('${uuid}')" title="复制">
+                                    📋
+                                </button>
+                                <button class="uuid-action-btn" onclick="deleteUUID(${index})" title="删除">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.innerHTML = listHTML;
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('totalCount').textContent = totalGenerated;
+            document.getElementById('currentVersion').textContent = currentVersion.toUpperCase();
+            document.getElementById('listCount').textContent = generatedUUIDs.length;
+        }
+
+        // 选择 UUID 版本
+        function selectUUIDVersion(version, element) {
+            currentVersion = version;
+            document.querySelectorAll('.uuid-version-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // 选择数量
+        function selectQuantity(quantity, element) {
+            if (isNaN(quantity) || quantity < 1 || quantity > 1000) {
+                DevToolkit.Toast.error('数量必须在 1-1000 之间');
+                return;
+            }
+
+            currentQuantity = quantity;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.quantity-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (element.classList && element.classList.contains('quantity-btn')) {
+                element.classList.add('active');
+            }
+        }
+
+        // 切换格式选项
+        function toggleFormat(type, element) {
+            const checkbox = document.getElementById(type);
+            
+            // 互斥选项处理
+            if (type === 'lowercase' && checkbox.checked) {
+                document.getElementById('uppercase').checked = false;
+                document.querySelector('[onclick*="uppercase"]').classList.remove('active');
+            } else if (type === 'uppercase' && checkbox.checked) {
+                document.getElementById('lowercase').checked = false;
+                document.querySelector('[onclick*="lowercase"]').classList.remove('active');
+            }
+            
+            checkbox.checked = !checkbox.checked;
+            element.classList.toggle('active');
+
+            // 重新格式化现有 UUID
+            if (generatedUUIDs.length > 0) {
+                generatedUUIDs = generatedUUIDs.map(uuid => {
+                    // 移除现有格式
+                    let clean = uuid.replace(/[{}]/g, '').replace(/-/g, '');
+                    // 恢复标准格式
+                    if (clean.length === 32) {
+                        clean = clean.slice(0, 8) + '-' + clean.slice(8, 12) + '-' + 
+                               clean.slice(12, 16) + '-' + clean.slice(16, 20) + '-' + clean.slice(20);
+                    }
+                    return formatUUID(clean);
+                });
+                renderUUIDList();
+                document.getElementById('featuredUUID').textContent = generatedUUIDs[0];
+            }
+        }
+
+        // 复制单个 UUID
+        function copyUUID(uuid) {
+            DevToolkit.copyToClipboard(uuid);
+        }
+
+        // 删除单个 UUID
+        function deleteUUID(index) {
+            generatedUUIDs.splice(index, 1);
+            
+            // 如果删除后列表为空，重置状态
+            if (generatedUUIDs.length === 0) {
+                hasGenerated = false;
+                const displayElement = document.getElementById('featuredUUID');
+                displayElement.textContent = '点击下方"生成 UUID"按钮开始 ✨';
+                displayElement.classList.remove('has-uuid');
+                displayElement.classList.add('empty');
+                document.getElementById('featuredHint').textContent = '点击上方区域可快速生成';
+            } else {
+                // 更新展示区为第一个 UUID
+                document.getElementById('featuredUUID').textContent = generatedUUIDs[0];
+            }
+            
+            renderUUIDList();
+            updateStats();
+            DevToolkit.Toast.info('已删除');
+        }
+
+        // 清空列表
+        function clearUUIDs() {
+            if (generatedUUIDs.length === 0) {
+                DevToolkit.Toast.warning('列表已经是空的');
+                return;
+            }
+
+            if (confirm('确定要清空所有 UUID 吗？')) {
+                generatedUUIDs = [];
+                hasGenerated = false;
+                
+                renderUUIDList();
+                updateStats();
+                
+                const displayElement = document.getElementById('featuredUUID');
+                displayElement.textContent = '点击下方"生成 UUID"按钮开始 ✨';
+                displayElement.classList.remove('has-uuid');
+                displayElement.classList.add('empty');
+                document.getElementById('featuredHint').textContent = '点击上方区域可快速生成';
+                
+                DevToolkit.Toast.success('已清空列表');
+            }
+        }
+
+        // 复制全部
+        function copyAllUUIDs() {
+            if (generatedUUIDs.length === 0) {
+                DevToolkit.Toast.warning('暂无 UUID 可复制');
+                return;
+            }
+
+            const text = generatedUUIDs.join('\n');
+            DevToolkit.copyToClipboard(text);
+        }
+
+        // 下载为文本
+        function downloadUUIDs() {
+            if (generatedUUIDs.length === 0) {
+                DevToolkit.Toast.warning('暂无 UUID 可下载');
+                return;
+            }
+
+            const text = generatedUUIDs.join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `uuids-${currentVersion}-${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            DevToolkit.Toast.success('下载成功！');
+        }
+
+        // 初始化
+        updateStats();
+    </script>
+</body>
+</html>

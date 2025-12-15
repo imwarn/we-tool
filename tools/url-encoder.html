@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="URL 编解码工具 - URL编码、URL解码、encodeURI、encodeURIComponent、Base64编码">
+    <meta name="keywords" content="URL编码,URL解码,urlencode,urldecode,encodeURI,encodeURIComponent">
+    <title>URL 编解码 - 开发者工具箱</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+    
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/tool.css">
+    
+    <style>
+        .url-showcase {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-tertiary) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+
+        .url-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .url-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--color-headline);
+            margin-bottom: 10px;
+        }
+
+        .url-subtitle {
+            font-size: 1.1em;
+            color: var(--color-paragraph);
+            opacity: 0.8;
+        }
+
+        /* 编码类型选择器 */
+        .encode-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .encode-type-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid var(--color-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: var(--color-paragraph);
+            text-align: center;
+        }
+
+        .encode-type-btn:hover {
+            border-color: var(--color-tertiary);
+            background: var(--color-secondary);
+        }
+
+        .encode-type-btn.active {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+
+        .encode-type-btn .type-name {
+            display: block;
+            font-size: 1em;
+            margin-bottom: 4px;
+        }
+
+        .encode-type-btn .type-desc {
+            display: block;
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        /* 示例区域 */
+        .examples-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .example-title {
+            font-weight: 700;
+            color: var(--color-headline);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .example-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .example-label {
+            color: var(--color-paragraph);
+            opacity: 0.7;
+            font-size: 0.85em;
+            margin-bottom: 4px;
+        }
+
+        .example-text {
+            color: var(--color-headline);
+            word-break: break-all;
+        }
+
+        /* 统计信息 */
+        .url-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .url-stat-item {
+            background: var(--color-secondary);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid var(--color-tertiary);
+            transition: all 0.3s;
+        }
+
+        .url-stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .url-stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--color-button);
+            font-family: 'Courier New', monospace;
+        }
+
+        .url-stat-label {
+            font-size: 0.85em;
+            color: var(--color-paragraph);
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        /* 快捷操作按钮 */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid var(--color-tertiary);
+            color: var(--color-paragraph);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--color-button);
+            border-color: var(--color-button);
+            color: var(--color-button-text);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .url-title {
+                font-size: 1.5em;
+            }
+
+            .encode-type-btn {
+                min-width: 100%;
+            }
+
+            .url-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .url-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <div class="logo-icon">🛠️</div>
+                <span data-i18n="nav.home">开发者工具箱</span>
+            </a>
+            <a href="../index.html" class="back-btn">
+                <span>←</span>
+                <span data-i18n="common.back">返回首页</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">🔗 URL 编解码</h1>
+            <p class="page-subtitle">URL 编码、解码、encodeURI、encodeURIComponent 多种方式</p>
+        </div>
+
+        <!-- URL 展示区 -->
+        <div class="url-showcase">
+            <div class="url-icon">🔗</div>
+            <div class="url-title">URL 编解码工具</div>
+            <div class="url-subtitle">支持多种编码方式，一键转换</div>
+        </div>
+
+        <!-- URL 编码 -->
+        <div class="tool-panel">
+            <h2 class="section-title">URL 编码</h2>
+
+            <div class="form-group">
+                <label class="form-label">选择编码类型</label>
+                <div class="encode-type-selector">
+                    <button class="encode-type-btn active" data-type="encodeURIComponent" onclick="selectEncodeType('encodeURIComponent', this)">
+                        <span class="type-name">encodeURIComponent</span>
+                        <span class="type-desc">推荐 - 编码所有特殊字符</span>
+                    </button>
+                    <button class="encode-type-btn" data-type="encodeURI" onclick="selectEncodeType('encodeURI', this)">
+                        <span class="type-name">encodeURI</span>
+                        <span class="type-desc">保留 URL 结构字符</span>
+                    </button>
+                    <button class="encode-type-btn" data-type="escape" onclick="selectEncodeType('escape', this)">
+                        <span class="type-name">escape (已废弃)</span>
+                        <span class="type-desc">仅用于兼容旧代码</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">输入文本</label>
+                <textarea 
+                    class="form-textarea" 
+                    id="encodeInput"
+                    rows="6"
+                    placeholder="输入需要编码的文本，例如：https://example.com/搜索?q=测试&type=中文"
+                ></textarea>
+                
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="useExample('url')">
+                        <span>📝</span>
+                        <span>示例：完整URL</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="useExample('query')">
+                        <span>🔍</span>
+                        <span>示例：查询参数</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="useExample('chinese')">
+                        <span>🀄</span>
+                        <span>示例：中文</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="useExample('special')">
+                        <span>✨</span>
+                        <span>示例：特殊字符</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="clearEncode()">
+                        <span>🗑️</span>
+                        <span>清空</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">编码结果</label>
+                <textarea 
+                    class="form-textarea" 
+                    id="encodeOutput"
+                    rows="6"
+                    readonly
+                    placeholder="编码后的结果将显示在这里"
+                ></textarea>
+                
+                <div class="url-stats-grid">
+                    <div class="url-stat-item">
+                        <div class="url-stat-value" id="encodeInputLength">0</div>
+                        <div class="url-stat-label">原始字符数</div>
+                    </div>
+                    <div class="url-stat-item">
+                        <div class="url-stat-value" id="encodeOutputLength">0</div>
+                        <div class="url-stat-label">编码后字符数</div>
+                    </div>
+                    <div class="url-stat-item">
+                        <div class="url-stat-value" id="encodeRatio">0%</div>
+                        <div class="url-stat-label">增长率</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="encodeURL()">
+                    <span>🔒</span>
+                    <span>编码</span>
+                </button>
+                <button class="btn btn-secondary" onclick="DevToolkit.copyToClipboard(document.getElementById('encodeOutput').value)">
+                    <span>📋</span>
+                    <span>复制结果</span>
+                </button>
+                <button class="btn btn-secondary" onclick="swapEncodeText()">
+                    <span>🔄</span>
+                    <span>交换输入输出</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- URL 解码 -->
+        <div class="tool-panel">
+            <h2 class="section-title">URL 解码</h2>
+
+            <div class="form-group">
+                <label class="form-label">选择解码类型</label>
+                <div class="encode-type-selector">
+                    <button class="encode-type-btn active" data-type="decodeURIComponent" onclick="selectDecodeType('decodeURIComponent', this)">
+                        <span class="type-name">decodeURIComponent</span>
+                        <span class="type-desc">推荐 - 解码所有字符</span>
+                    </button>
+                    <button class="encode-type-btn" data-type="decodeURI" onclick="selectDecodeType('decodeURI', this)">
+                        <span class="type-name">decodeURI</span>
+                        <span class="type-desc">解码保留结构的URL</span>
+                    </button>
+                    <button class="encode-type-btn" data-type="unescape" onclick="selectDecodeType('unescape', this)">
+                        <span class="type-name">unescape (已废弃)</span>
+                        <span class="type-desc">仅用于兼容旧代码</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">输入编码文本</label>
+                <textarea 
+                    class="form-textarea" 
+                    id="decodeInput"
+                    rows="6"
+                    placeholder="输入需要解码的文本，例如：https%3A%2F%2Fexample.com%2F%E6%90%9C%E7%B4%A2"
+                ></textarea>
+                
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="useDecodeExample('encoded')">
+                        <span>📝</span>
+                        <span>示例：编码URL</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="useDecodeExample('params')">
+                        <span>🔍</span>
+                        <span>示例：编码参数</span>
+                    </button>
+                    <button class="quick-action-btn" onclick="clearDecode()">
+                        <span>🗑️</span>
+                        <span>清空</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">解码结果</label>
+                <textarea 
+                    class="form-textarea" 
+                    id="decodeOutput"
+                    rows="6"
+                    readonly
+                    placeholder="解码后的结果将显示在这里"
+                ></textarea>
+                
+                <div class="url-stats-grid">
+                    <div class="url-stat-item">
+                        <div class="url-stat-value" id="decodeInputLength">0</div>
+                        <div class="url-stat-label">编码字符数</div>
+                    </div>
+                    <div class="url-stat-item">
+                        <div class="url-stat-value" id="decodeOutputLength">0</div>
+                        <div class="url-stat-label">解码后字符数</div>
+                    </div>
+                    <div class="url-stat-item">
+                        <div class="url-stat-value" id="decodeRatio">0%</div>
+                        <div class="url-stat-label">缩减率</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="decodeURL()">
+                    <span>🔓</span>
+                    <span>解码</span>
+                </button>
+                <button class="btn btn-secondary" onclick="DevToolkit.copyToClipboard(document.getElementById('decodeOutput').value)">
+                    <span>📋</span>
+                    <span>复制结果</span>
+                </button>
+                <button class="btn btn-secondary" onclick="swapDecodeText()">
+                    <span>🔄</span>
+                    <span>交换输入输出</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 编码对比说明 -->
+        <div class="tool-panel">
+            <h2 class="section-title">编码方式对比</h2>
+            
+            <div class="examples-section">
+                <div class="example-title">
+                    <span>💡</span>
+                    <span>encodeURIComponent vs encodeURI</span>
+                </div>
+                
+                <div class="example-item">
+                    <div class="example-label">原始文本：</div>
+                    <div class="example-text">https://example.com/搜索?q=测试&name=张三</div>
+                </div>
+                
+                <div class="example-item">
+                    <div class="example-label">encodeURIComponent（编码所有特殊字符）：</div>
+                    <div class="example-text">https%3A%2F%2Fexample.com%2F%E6%90%9C%E7%B4%A2%3Fq%3D%E6%B5%8B%E8%AF%95%26name%3D%E5%BC%A0%E4%B8%89</div>
+                </div>
+                
+                <div class="example-item">
+                    <div class="example-label">encodeURI（保留URL结构字符 :/?#[]@!$&'()*+,;=）：</div>
+                    <div class="example-text">https://example.com/%E6%90%9C%E7%B4%A2?q=%E6%B5%8B%E8%AF%95&name=%E5%BC%A0%E4%B8%89</div>
+                </div>
+            </div>
+
+            <div class="examples-section" style="margin-top: 20px;">
+                <div class="example-title">
+                    <span>📚</span>
+                    <span>使用场景</span>
+                </div>
+                
+                <div class="info-box" style="margin: 0;">
+                    <ul style="margin: 0;">
+                        <li><strong>encodeURIComponent</strong>：用于编码 URL 参数值，会编码所有特殊字符包括 <code>/?#&=</code> 等</li>
+                        <li><strong>encodeURI</strong>：用于编码完整的 URL，保留 URL 结构字符如 <code>://</code>、<code>?</code>、<code>&</code> 等</li>
+                        <li><strong>使用建议</strong>：
+                            <ul>
+                                <li>编码查询参数的值：使用 <code>encodeURIComponent</code></li>
+                                <li>编码完整URL：使用 <code>encodeURI</code></li>
+                                <li>避免使用已废弃的 <code>escape/unescape</code></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="info-box">
+            <h4>💡 使用说明</h4>
+            <ul>
+                <li><strong>编码类型</strong>：根据使用场景选择合适的编码方式</li>
+                <li><strong>自动统计</strong>：实时显示字符数和编码增长率</li>
+                <li><strong>批量操作</strong>：支持大段文本的批量编码解码</li>
+                <li><strong>快速示例</strong>：点击快捷按钮快速填充示例文本</li>
+                <li><strong>交换功能</strong>：可以将输出结果作为输入继续处理</li>
+                <li><strong>错误处理</strong>：解码失败时会显示友好的错误提示</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 公共脚本 -->
+    <script src="../assets/js/common.js"></script>
+
+    <script>
+        let currentEncodeType = 'encodeURIComponent';
+        let currentDecodeType = 'decodeURIComponent';
+
+        // 选择编码类型
+        function selectEncodeType(type, btn) {
+            currentEncodeType = type;
+            document.querySelectorAll('.encode-type-selector .encode-type-btn').forEach(b => {
+                if (b.parentElement === btn.parentElement) {
+                    b.classList.remove('active');
+                }
+            });
+            btn.classList.add('active');
+            
+            // 如果已有输入，自动重新编码
+            const input = document.getElementById('encodeInput').value;
+            if (input.trim()) {
+                encodeURL();
+            }
+        }
+
+        // 选择解码类型
+        function selectDecodeType(type, btn) {
+            currentDecodeType = type;
+            document.querySelectorAll('.encode-type-selector .encode-type-btn').forEach(b => {
+                if (b.parentElement === btn.parentElement) {
+                    b.classList.remove('active');
+                }
+            });
+            btn.classList.add('active');
+            
+            // 如果已有输入，自动重新解码
+            const input = document.getElementById('decodeInput').value;
+            if (input.trim()) {
+                decodeURL();
+            }
+        }
+
+        // 使用示例
+        function useExample(type) {
+            const examples = {
+                url: 'https://example.com/搜索?q=测试&type=中文',
+                query: 'name=张三&age=18&city=北京',
+                chinese: '你好世界！Hello World！',
+                special: '!@#$%^&*()_+-=[]{}|;:\'",.<>?/'
+            };
+            
+            document.getElementById('encodeInput').value = examples[type] || '';
+            encodeURL();
+        }
+
+        // 使用解码示例
+        function useDecodeExample(type) {
+            const examples = {
+                encoded: 'https%3A%2F%2Fexample.com%2F%E6%90%9C%E7%B4%A2%3Fq%3D%E6%B5%8B%E8%AF%95',
+                params: 'name%3D%E5%BC%A0%E4%B8%89%26age%3D18%26city%3D%E5%8C%97%E4%BA%AC'
+            };
+            
+            document.getElementById('decodeInput').value = examples[type] || '';
+            decodeURL();
+        }
+
+        // URL 编码
+        function encodeURL() {
+            const input = document.getElementById('encodeInput').value;
+            
+            if (!input.trim()) {
+                DevToolkit.Toast.warning('请输入需要编码的文本');
+                return;
+            }
+
+            try {
+                let result = '';
+                
+                switch(currentEncodeType) {
+                    case 'encodeURIComponent':
+                        result = encodeURIComponent(input);
+                        break;
+                    case 'encodeURI':
+                        result = encodeURI(input);
+                        break;
+                    case 'escape':
+                        result = escape(input);
+                        DevToolkit.Toast.warning('escape 已废弃，建议使用 encodeURIComponent');
+                        break;
+                    default:
+                        result = encodeURIComponent(input);
+                }
+                
+                document.getElementById('encodeOutput').value = result;
+                updateEncodeStats(input, result);
+                DevToolkit.Toast.success('编码完成！');
+            } catch (error) {
+                DevToolkit.Toast.error('编码失败：' + error.message);
+            }
+        }
+
+        // URL 解码
+        function decodeURL() {
+            const input = document.getElementById('decodeInput').value;
+            
+            if (!input.trim()) {
+                DevToolkit.Toast.warning('请输入需要解码的文本');
+                return;
+            }
+
+            try {
+                let result = '';
+                
+                switch(currentDecodeType) {
+                    case 'decodeURIComponent':
+                        result = decodeURIComponent(input);
+                        break;
+                    case 'decodeURI':
+                        result = decodeURI(input);
+                        break;
+                    case 'unescape':
+                        result = unescape(input);
+                        DevToolkit.Toast.warning('unescape 已废弃，建议使用 decodeURIComponent');
+                        break;
+                    default:
+                        result = decodeURIComponent(input);
+                }
+                
+                document.getElementById('decodeOutput').value = result;
+                updateDecodeStats(input, result);
+                DevToolkit.Toast.success('解码完成！');
+            } catch (error) {
+                DevToolkit.Toast.error('解码失败：' + error.message + '，请检查输入是否为有效的编码文本');
+            }
+        }
+
+        // 更新编码统计
+        function updateEncodeStats(input, output) {
+            const inputLen = input.length;
+            const outputLen = output.length;
+            const ratio = inputLen > 0 ? Math.round((outputLen - inputLen) / inputLen * 100) : 0;
+            
+            document.getElementById('encodeInputLength').textContent = inputLen;
+            document.getElementById('encodeOutputLength').textContent = outputLen;
+            document.getElementById('encodeRatio').textContent = (ratio >= 0 ? '+' : '') + ratio + '%';
+        }
+
+        // 更新解码统计
+        function updateDecodeStats(input, output) {
+            const inputLen = input.length;
+            const outputLen = output.length;
+            const ratio = inputLen > 0 ? Math.round((inputLen - outputLen) / inputLen * 100) : 0;
+            
+            document.getElementById('decodeInputLength').textContent = inputLen;
+            document.getElementById('decodeOutputLength').textContent = outputLen;
+            document.getElementById('decodeRatio').textContent = ratio + '%';
+        }
+
+        // 交换编码输入输出
+        function swapEncodeText() {
+            const input = document.getElementById('encodeInput');
+            const output = document.getElementById('encodeOutput');
+            const temp = input.value;
+            input.value = output.value;
+            output.value = temp;
+            
+            if (input.value.trim()) {
+                encodeURL();
+            }
+        }
+
+        // 交换解码输入输出
+        function swapDecodeText() {
+            const input = document.getElementById('decodeInput');
+            const output = document.getElementById('decodeOutput');
+            const temp = input.value;
+            input.value = output.value;
+            output.value = temp;
+            
+            if (input.value.trim()) {
+                decodeURL();
+            }
+        }
+
+        // 清空编码
+        function clearEncode() {
+            document.getElementById('encodeInput').value = '';
+            document.getElementById('encodeOutput').value = '';
+            updateEncodeStats('', '');
+        }
+
+        // 清空解码
+        function clearDecode() {
+            document.getElementById('decodeInput').value = '';
+            document.getElementById('decodeOutput').value = '';
+            updateDecodeStats('', '');
+        }
+
+        // 监听输入变化
+        document.getElementById('encodeInput').addEventListener('input', function() {
+            const value = this.value;
+            if (value.trim()) {
+                encodeURL();
+            } else {
+                document.getElementById('encodeOutput').value = '';
+                updateEncodeStats('', '');
+            }
+        });
+
+        document.getElementById('decodeInput').addEventListener('input', function() {
+            const value = this.value;
+            if (value.trim()) {
+                decodeURL();
+            } else {
+                document.getElementById('decodeOutput').value = '';
+                updateDecodeStats('', '');
+            }
+        });
+
+        // 初始化统计
+        updateEncodeStats('', '');
+        updateDecodeStats('', '');
+    </script>
+</body>
+</html>

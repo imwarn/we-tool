@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="时间戳转换工具 - Unix 时间戳、ISO 8601、UTC、本地时间等多种格式互转">
+    <meta name="keywords" content="时间戳转换,Unix时间戳,timestamp,ISO8601,UTC时间">
+    <title>时间戳转换 - 开发者工具箱</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏰</text></svg>">
+    
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/tool.css">
+    
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="../assets/css/flatpickr.min.css">
+    
+    <!-- 时间戳转换工具样式 -->
+    <link rel="stylesheet" href="../assets/css/timestamp.css">
+    <link rel="stylesheet" href="../assets/css/flatpickr-custom.css">
+
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <div class="logo-icon">🛠️</div>
+                <span data-i18n="nav.home">开发者工具箱</span>
+            </a>
+            <a href="../index.html" class="back-btn">
+                <span>←</span>
+                <span data-i18n="common.back">返回首页</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">⏰ 时间戳转换</h1>
+            <p class="page-subtitle">Unix 时间戳、ISO 8601、UTC、本地时间等多种格式互转</p>
+        </div>
+
+        <!-- 当前时间 -->
+        <div class="current-time">
+            <div class="time-display" id="currentTimestamp">0</div>
+            <div class="time-label">当前 Unix 时间戳（毫秒）</div>
+            <div class="time-label" style="margin-top: 10px;" id="currentDateTime"></div>
+        </div>
+
+        <!-- 时间戳转换 -->
+        <div class="tool-panel">
+            <h2 class="section-title">时间戳转日期</h2>
+
+            <div class="form-group">
+                <label class="form-label">输入时间戳</label>
+                <input 
+                    type="text" 
+                    class="form-input" 
+                    id="timestampInput"
+                    placeholder="输入 Unix 时间戳（秒或毫秒）"
+                >
+                <div class="quick-buttons">
+                    <button class="quick-btn" onclick="useCurrentTimestamp()">使用当前时间</button>
+                    <button class="quick-btn" onclick="useTimestamp(0)">Unix 纪元 (0)</button>
+                    <button class="quick-btn" onclick="useTimestamp(946684800000)">2011-06-01</button>
+                    <button class="quick-btn" onclick="useTimestamp(1577836800000)">2017-10-05</button>
+                    <button class="quick-btn" onclick="useTimestamp(1609459200000)">2025-12-12</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">转换结果</label>
+                <div id="timestampResults"></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="convertTimestamp()">
+                    <span>🔄</span>
+                    <span>转换</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 日期转时间戳 -->
+        <div class="tool-panel">
+            <h2 class="section-title">日期转时间戳</h2>
+
+            <div class="date-time-container">
+                <div class="datetime-grid">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">选择日期</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon">📅</span>
+                            <input 
+                                type="text" 
+                                class="datetime-input"
+                                id="dateInput"
+                                placeholder="选择日期"
+                                readonly
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">选择时间（时:分:秒）</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon">🕐</span>
+                            <input 
+                                type="text" 
+                                class="datetime-input"
+                                id="timeInput"
+                                placeholder="选择时间（含秒）"
+                                readonly
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="date-hint">
+                    <span class="date-hint-icon">💡</span>
+                    <span><strong>提示：</strong>点击输入框可以使用美化的日期时间选择器，完美适配站点主题，时间精确到秒</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">转换结果</label>
+                <div id="dateResults"></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="convertDate()">
+                    <span>🔄</span>
+                    <span>转换</span>
+                </button>
+                <button class="btn btn-secondary" onclick="useTodayDate()">
+                    <span>📅</span>
+                    <span>使用当前时间</span>
+                </button>
+                <button class="btn btn-secondary" onclick="useYesterdayDate()">
+                    <span>⏮️</span>
+                    <span>昨天 00:00:00</span>
+                </button>
+                <button class="btn btn-secondary" onclick="useTomorrowDate()">
+                    <span>⏭️</span>
+                    <span>明天 00:00:00</span>
+                </button>
+                <button class="btn btn-secondary" onclick="resetDateTime()">
+                    <span>🔄</span>
+                    <span>重置</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 时区转换 -->
+        <div class="tool-panel">
+            <h2 class="section-title">时区信息</h2>
+
+            <div class="timezone-stats-grid">
+                <div class="timezone-stat-item">
+                    <div class="timezone-stat-value" id="localTimezone">-</div>
+                    <div class="timezone-stat-label">本地时区</div>
+                </div>
+                <div class="timezone-stat-item">
+                    <div class="timezone-stat-value" id="utcOffset">-</div>
+                    <div class="timezone-stat-label">UTC 偏移</div>
+                </div>
+                <div class="timezone-stat-item">
+                    <div class="timezone-stat-value" id="isDST">-</div>
+                    <div class="timezone-stat-label">夏令时</div>
+                </div>
+                <div class="timezone-stat-item">
+                    <div class="timezone-stat-value" id="weekday">-</div>
+                    <div class="timezone-stat-label">星期几</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="info-box">
+            <h4>💡 使用说明</h4>
+            <ul>
+                <li><strong>Unix 时间戳</strong>：从 1970-01-01 00:00:00 UTC 开始的秒数或毫秒数</li>
+                <li><strong>自动识别</strong>：自动识别输入的是秒（10位）还是毫秒（13位）</li>
+                <li><strong>美化选择器</strong>：使用 Flatpickr 实现的主题一致的日期时间选择器</li>
+                <li><strong>秒级精度</strong>：时间选择器支持秒级精度，格式为 HH:MM:SS</li>
+                <li><strong>点击复制</strong>：点击 📋 图标快速复制结果</li>
+                <li><strong>快速选择</strong>：使用快捷按钮快速选择常用日期</li>
+                <li><strong>轻量级</strong>：Flatpickr 仅 ~6KB (gzipped)</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    
+    <!-- 公共脚本 -->
+    <script src="../assets/js/common.js"></script>
+
+    <script>
+        let datePicker, timePicker;
+
+        // 初始化日期选择器
+        function initDatePickers() {
+            // 日期选择器
+            datePicker = flatpickr("#dateInput", {
+                locale: "zh",
+                dateFormat: "Y-m-d",
+                defaultDate: new Date(),
+                allowInput: false,
+                clickOpens: true,
+                animate: true,
+                onChange: function(selectedDates, dateStr) {
+                    convertDate();
+                }
+            });
+
+            // 时间选择器（支持秒）
+            timePicker = flatpickr("#timeInput", {
+                locale: "zh",
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i:S",
+                time_24hr: true,
+                enableSeconds: true,  // 关键：启用秒
+                defaultDate: "00:00:00",
+                allowInput: false,
+                clickOpens: true,
+                animate: true,
+                onChange: function(selectedDates, timeStr) {
+                    convertDate();
+                }
+            });
+        }
+
+        // 更新当前时间
+        function updateCurrentTime() {
+            const now = Date.now();
+            document.getElementById('currentTimestamp').textContent = now;
+            document.getElementById('currentDateTime').textContent = DevToolkit.formatTime(now);
+        }
+
+        // 显示时区信息
+        function showTimezoneInfo() {
+            const now = new Date();
+            const offset = -now.getTimezoneOffset();
+            const hours = Math.floor(Math.abs(offset) / 60);
+            const minutes = Math.abs(offset) % 60;
+            const sign = offset >= 0 ? '+' : '-';
+            
+            document.getElementById('localTimezone').textContent = 
+                Intl.DateTimeFormat().resolvedOptions().timeZone;
+            document.getElementById('utcOffset').textContent = 
+                `UTC${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            
+            // 简单判断是否可能处于夏令时（仅供参考）
+            const jan = new Date(now.getFullYear(), 0, 1);
+            const jul = new Date(now.getFullYear(), 6, 1);
+            const isDST = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset()) !== now.getTimezoneOffset();
+            document.getElementById('isDST').textContent = isDST ? '是' : '否';
+
+            // 显示星期几
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            document.getElementById('weekday').textContent = weekdays[now.getDay()];
+        }
+
+        // 使用当前时间戳
+        function useCurrentTimestamp() {
+            document.getElementById('timestampInput').value = Date.now();
+            convertTimestamp();
+        }
+
+        // 使用指定时间戳
+        function useTimestamp(ts) {
+            document.getElementById('timestampInput').value = ts;
+            convertTimestamp();
+        }
+
+        // 转换时间戳
+        function convertTimestamp() {
+            let timestamp = document.getElementById('timestampInput').value.trim();
+            
+            if (!timestamp) {
+                DevToolkit.Toast.warning('请输入时间戳');
+                return;
+            }
+
+            timestamp = parseInt(timestamp);
+            
+            if (isNaN(timestamp)) {
+                DevToolkit.Toast.error('无效的时间戳格式');
+                return;
+            }
+
+            // 自动识别秒或毫秒
+            if (timestamp < 10000000000) {
+                timestamp = timestamp * 1000;
+            }
+
+            const date = new Date(timestamp);
+            
+            if (isNaN(date.getTime())) {
+                DevToolkit.Toast.error('无效的时间戳');
+                return;
+            }
+
+            const results = [
+                { label: 'Unix 时间戳（秒）', value: Math.floor(timestamp / 1000) },
+                { label: 'Unix 时间戳（毫秒）', value: timestamp },
+                { label: 'ISO 8601', value: date.toISOString() },
+                { label: 'UTC 时间', value: date.toUTCString() },
+                { label: '本地时间', value: DevToolkit.formatTime(date) },
+                { label: '相对时间', value: getRelativeTime(date) }
+            ];
+
+            displayResults('timestampResults', results);
+            DevToolkit.Toast.success('转换完成！');
+        }
+
+        // 使用今天日期和当前时间
+        function useTodayDate() {
+            const now = new Date();
+            datePicker.setDate(now);
+            
+            // 格式化当前时间为 HH:MM:SS
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const timeStr = `${hours}:${minutes}:${seconds}`;
+            
+            timePicker.setDate(timeStr);
+            convertDate();
+        }
+
+        // 使用昨天日期
+        function useYesterdayDate() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            datePicker.setDate(yesterday);
+            timePicker.setDate("00:00:00");
+            convertDate();
+        }
+
+        // 使用明天日期
+        function useTomorrowDate() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            datePicker.setDate(tomorrow);
+            timePicker.setDate("00:00:00");
+            convertDate();
+        }
+
+        // 重置日期时间
+        function resetDateTime() {
+            const today = new Date();
+            datePicker.setDate(today);
+            timePicker.setDate("00:00:00");
+            document.getElementById('dateResults').innerHTML = '';
+            DevToolkit.Toast.info('已重置');
+        }
+
+        // 转换日期
+        function convertDate() {
+            const dateValue = document.getElementById('dateInput').value;
+            const timeValue = document.getElementById('timeInput').value;
+
+            if (!dateValue) {
+                DevToolkit.Toast.warning('请选择日期');
+                return;
+            }
+
+            if (!timeValue) {
+                DevToolkit.Toast.warning('请选择时间');
+                return;
+            }
+
+            const dateTime = `${dateValue}T${timeValue}`;
+            const date = new Date(dateTime);
+
+            if (isNaN(date.getTime())) {
+                DevToolkit.Toast.error('无效的日期格式');
+                return;
+            }
+
+            const timestamp = date.getTime();
+
+            const results = [
+                { label: 'Unix 时间戳（秒）', value: Math.floor(timestamp / 1000) },
+                { label: 'Unix 时间戳（毫秒）', value: timestamp },
+                { label: 'ISO 8601', value: date.toISOString() },
+                { label: 'UTC 时间', value: date.toUTCString() },
+                { label: '本地时间', value: DevToolkit.formatTime(date) },
+                { label: '相对时间', value: getRelativeTime(date) }
+            ];
+
+            displayResults('dateResults', results);
+            DevToolkit.Toast.success('转换完成！');
+        }
+
+        // 显示结果
+        function displayResults(containerId, results) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = results.map(item => `
+                <div class="result-item">
+                    <div class="result-label">${item.label}</div>
+                    <div class="result-value">${item.value}</div>
+                    <div class="copy-icon" onclick="DevToolkit.copyToClipboard('${item.value}')" title="复制">
+                        📋
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取相对时间
+        function getRelativeTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(Math.abs(diff) / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (diff > 0) {
+                if (days > 0) return `${days} 天前`;
+                if (hours > 0) return `${hours} 小时前`;
+                if (minutes > 0) return `${minutes} 分钟前`;
+                return `${seconds} 秒前`;
+            } else {
+                if (days > 0) return `${days} 天后`;
+                if (hours > 0) return `${hours} 小时后`;
+                if (minutes > 0) return `${minutes} 分钟后`;
+                return `${seconds} 秒后`;
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initDatePickers();
+            updateCurrentTime();
+            showTimezoneInfo();
+            setInterval(updateCurrentTime, 1000);
+            
+            // 初始转换
+            setTimeout(convertDate, 100);
+        });
+    </script>
+</body>
+</html>

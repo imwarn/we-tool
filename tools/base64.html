@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Base64 编解码工具 - 支持文本和图片的 Base64 编码解码">
+    <meta name="keywords" content="base64,编码,解码,encode,decode,图片转base64">
+    <title>Base64 编解码 - 开发者工具箱</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+    
+    <!-- 公共样式 -->
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/tool.css">
+    
+    <style>
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            border: 2px solid var(--color-secondary);
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        .file-info {
+            background: var(--color-secondary);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .file-info-label {
+            font-weight: 600;
+            color: var(--color-headline);
+        }
+
+        .file-info-value {
+            color: var(--color-paragraph);
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <div class="logo-icon">🛠️</div>
+                <span data-i18n="nav.home">开发者工具箱</span>
+            </a>
+            <a href="../index.html" class="back-btn">
+                <span>←</span>
+                <span data-i18n="common.back">返回首页</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">🔐 Base64 编解码</h1>
+            <p class="page-subtitle">支持文本和图片的 Base64 编码解码</p>
+        </div>
+
+        <!-- Tab 切换 -->
+        <div class="tool-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="DevToolkit.switchTab('text', event)">
+                    📝 文本编解码
+                </button>
+                <button class="tab-btn" onclick="DevToolkit.switchTab('image', event)">
+                    🖼️ 图片编解码
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 1: 文本编解码 -->
+        <div class="tab-content active" id="tab-text">
+            <div class="tool-panel">
+                <h2 class="section-title">文本 Base64 编解码</h2>
+
+                <div class="form-group">
+                    <label class="form-label">输入文本</label>
+                    <textarea 
+                        class="form-textarea" 
+                        id="textInput" 
+                        placeholder="输入要编码或解码的文本..."
+                        style="min-height: 200px;"
+                    ></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="encodeText()">
+                        <span>🔒</span>
+                        <span>编码（Encode）</span>
+                    </button>
+                    <button class="btn btn-success" onclick="decodeText()">
+                        <span>🔓</span>
+                        <span>解码（Decode）</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="copyTextResult()">
+                        <span>📋</span>
+                        <span>复制结果</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearText()">
+                        <span>🗑️</span>
+                        <span>清空</span>
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">结果</label>
+                    <textarea 
+                        class="form-textarea" 
+                        id="textOutput" 
+                        readonly
+                        placeholder="编码/解码结果将显示在这里..."
+                        style="min-height: 200px;"
+                    ></textarea>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="inputLength">0</div>
+                            <div class="stat-label">输入长度</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="outputLength">0</div>
+                            <div class="stat-label">输出长度</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: 图片编解码 -->
+        <div class="tab-content" id="tab-image">
+            <!-- 图片编码 -->
+            <div class="tool-panel">
+                <h2 class="section-title">图片转 Base64</h2>
+
+                <div class="upload-area" id="imageUploadArea" onclick="document.getElementById('imageFileInput').click()">
+                    <div class="upload-icon">🖼️</div>
+                    <p style="font-size: 1.2em; margin-bottom: 10px; font-weight: 600;">点击或拖拽上传图片</p>
+                    <p style="opacity: 0.7;">支持 PNG、JPG、GIF、SVG 等格式</p>
+                </div>
+                <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+
+                <img id="imagePreview" class="image-preview" alt="图片预览">
+
+                <div id="imageFileInfo" class="file-info">
+                    <div class="file-info-item">
+                        <span class="file-info-label">文件名：</span>
+                        <span class="file-info-value" id="fileName">-</span>
+                    </div>
+                    <div class="file-info-item">
+                        <span class="file-info-label">文件大小：</span>
+                        <span class="file-info-value" id="fileSize">-</span>
+                    </div>
+                    <div class="file-info-item">
+                        <span class="file-info-label">图片尺寸：</span>
+                        <span class="file-info-value" id="imageDimensions">-</span>
+                    </div>
+                    <div class="file-info-item">
+                        <span class="file-info-label">MIME 类型：</span>
+                        <span class="file-info-value" id="mimeType">-</span>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="copyImageBase64()">
+                        <span>📋</span>
+                        <span>复制 Base64</span>
+                    </button>
+                    <button class="btn btn-success" onclick="downloadImageBase64()">
+                        <span>💾</span>
+                        <span>下载为文本</span>
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Base64 结果</label>
+                    <textarea 
+                        class="form-textarea" 
+                        id="imageBase64Output" 
+                        readonly
+                        placeholder="Base64 编码结果将显示在这里..."
+                        style="min-height: 150px;"
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- Base64 解码为图片 -->
+            <div class="tool-panel">
+                <h2 class="section-title">Base64 转图片</h2>
+
+                <div class="form-group">
+                    <label class="form-label">输入 Base64 字符串</label>
+                    <textarea 
+                        class="form-textarea" 
+                        id="base64Input" 
+                        placeholder="粘贴 Base64 字符串（支持 data:image 格式）..."
+                        style="min-height: 150px;"
+                    ></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="decodeImageBase64()">
+                        <span>🔄</span>
+                        <span>解码预览</span>
+                    </button>
+                    <button class="btn btn-success" onclick="downloadDecodedImage()">
+                        <span>💾</span>
+                        <span>下载图片</span>
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">预览</label>
+                    <img id="decodedImagePreview" class="image-preview" alt="解码后的图片">
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="info-box">
+            <h4>💡 使用说明</h4>
+            <ul>
+                <li><strong>文本编码</strong>：将文本转换为 Base64 编码字符串</li>
+                <li><strong>文本解码</strong>：将 Base64 字符串还原为原始文本</li>
+                <li><strong>图片编码</strong>：将图片转换为 Base64 Data URL，可直接嵌入 HTML/CSS</li>
+                <li><strong>图片解码</strong>：支持解析 Data URL 和纯 Base64 字符串</li>
+                <li><strong>安全提示</strong>：Base64 不是加密，仅用于编码，不要用于敏感信息保护</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 公共脚本 -->
+    <script src="../assets/js/common.js"></script>
+
+    <script>
+        let currentImageBase64 = '';
+        let currentImageFile = null;
+
+        // ===== 文本编解码 =====
+        document.getElementById('textInput').addEventListener('input', function() {
+            document.getElementById('inputLength').textContent = this.value.length;
+        });
+
+        function encodeText() {
+            const input = document.getElementById('textInput').value;
+            if (!input) {
+                DevToolkit.Toast.warning('请输入要编码的文本');
+                return;
+            }
+
+            try {
+                const encoded = btoa(unescape(encodeURIComponent(input)));
+                document.getElementById('textOutput').value = encoded;
+                document.getElementById('outputLength').textContent = encoded.length;
+                DevToolkit.Toast.success('编码成功！');
+            } catch (e) {
+                DevToolkit.Toast.error('编码失败：' + e.message);
+            }
+        }
+
+        function decodeText() {
+            const input = document.getElementById('textInput').value;
+            if (!input) {
+                DevToolkit.Toast.warning('请输入要解码的 Base64 字符串');
+                return;
+            }
+
+            try {
+                const decoded = decodeURIComponent(escape(atob(input.trim())));
+                document.getElementById('textOutput').value = decoded;
+                document.getElementById('outputLength').textContent = decoded.length;
+                DevToolkit.Toast.success('解码成功！');
+            } catch (e) {
+                DevToolkit.Toast.error('解码失败：请检查 Base64 格式是否正确');
+            }
+        }
+
+        function copyTextResult() {
+            const output = document.getElementById('textOutput').value;
+            if (!output) {
+                DevToolkit.Toast.warning('没有可复制的内容');
+                return;
+            }
+            DevToolkit.copyToClipboard(output);
+        }
+
+        function clearText() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('textOutput').value = '';
+            document.getElementById('inputLength').textContent = '0';
+            document.getElementById('outputLength').textContent = '0';
+        }
+
+        // ===== 图片编码 =====
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        const imageFileInput = document.getElementById('imageFileInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            imageUploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            imageUploadArea.addEventListener(eventName, () => {
+                imageUploadArea.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            imageUploadArea.addEventListener(eventName, () => {
+                imageUploadArea.classList.remove('dragover');
+            });
+        });
+
+        imageUploadArea.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleImageFile(files[0]);
+        });
+
+        imageFileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) handleImageFile(e.target.files[0]);
+        });
+
+        function handleImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                DevToolkit.Toast.error('请上传图片文件');
+                return;
+            }
+
+            currentImageFile = file;
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                currentImageBase64 = e.target.result;
+                
+                // 显示预览
+                const preview = document.getElementById('imagePreview');
+                preview.src = currentImageBase64;
+                preview.classList.add('show');
+
+                // 显示文件信息
+                const img = new Image();
+                img.onload = function() {
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('fileSize').textContent = DevToolkit.formatFileSize(file.size);
+                    document.getElementById('imageDimensions').textContent = `${img.width} × ${img.height}`;
+                    document.getElementById('mimeType').textContent = file.type;
+                    document.getElementById('imageFileInfo').classList.add('show');
+                };
+                img.src = currentImageBase64;
+
+                // 显示 Base64
+                document.getElementById('imageBase64Output').value = currentImageBase64;
+
+                DevToolkit.Toast.success('图片上传成功！');
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function copyImageBase64() {
+            if (!currentImageBase64) {
+                DevToolkit.Toast.warning('请先上传图片');
+                return;
+            }
+            DevToolkit.copyToClipboard(currentImageBase64);
+        }
+
+        function downloadImageBase64() {
+            if (!currentImageBase64) {
+                DevToolkit.Toast.warning('请先上传图片');
+                return;
+            }
+            DevToolkit.downloadFile(currentImageBase64, 'image-base64.txt', 'text/plain');
+        }
+
+        // ===== 图片解码 =====
+        function decodeImageBase64() {
+            let base64 = document.getElementById('base64Input').value.trim();
+            
+            if (!base64) {
+                DevToolkit.Toast.warning('请输入 Base64 字符串');
+                return;
+            }
+
+            // 如果不是 data URL，尝试添加前缀
+            if (!base64.startsWith('data:')) {
+                base64 = 'data:image/png;base64,' + base64;
+            }
+
+            try {
+                const preview = document.getElementById('decodedImagePreview');
+                preview.src = base64;
+                preview.classList.add('show');
+                
+                preview.onerror = () => {
+                    DevToolkit.Toast.error('Base64 格式错误或不是有效的图片');
+                    preview.classList.remove('show');
+                };
+
+                preview.onload = () => {
+                    DevToolkit.Toast.success('解码成功！');
+                };
+            } catch (e) {
+                DevToolkit.Toast.error('解码失败：' + e.message);
+            }
+        }
+
+        function downloadDecodedImage() {
+            const preview = document.getElementById('decodedImagePreview');
+            if (!preview.src || preview.src === window.location.href) {
+                DevToolkit.Toast.warning('请先解码图片');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = preview.src;
+            link.download = 'decoded-image.png';
+            link.click();
+            DevToolkit.Toast.success('图片已下载！');
+        }
+    </script>
+</body>
+</html>
