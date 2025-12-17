@@ -45,7 +45,8 @@ const i18nData = {
         'badge.enhanced': '增强版',
         
         // 页脚
-        'footer.made': '用 ❤️ 制作',
+        'footer.author': 'imWarn',
+        'footer.made': '制作的小玩具',
         'footer.github': 'GitHub',
         'footer.color': '配色方案'
     },
@@ -85,7 +86,8 @@ const i18nData = {
         'badge.new': '新',
         'badge.enhanced': '增強版',
         
-        'footer.made': '用 ❤️ 製作',
+        'footer.author': 'imWarn',
+        'footer.made': '制作的小玩具',
         'footer.github': 'GitHub',
         'footer.color': '配色方案'
     },
@@ -125,7 +127,8 @@ const i18nData = {
         'badge.new': 'New',
         'badge.enhanced': 'Enhanced',
         
-        'footer.made': 'Made with ❤️',
+        'footer.author': 'imWarn',
+        'footer.made': 'Made something useful',
         'footer.github': 'GitHub',
         'footer.color': 'Color Scheme'
     }
